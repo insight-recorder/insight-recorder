@@ -21,6 +21,11 @@
 
 import gst
 import time
+
+#TODO get devices for capture sources
+#from gi.repository import GUdev
+#devices g_udev_client_query_by_subsystem (monitor->priv->client, "video4linux");
+
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GdkX11

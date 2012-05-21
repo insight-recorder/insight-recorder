@@ -22,8 +22,6 @@
 
 from gi.repository import Gtk
 from gi.repository import GLib
-#for selecting input
-from gi.repository import GUdev
 #for screen res
 from gi.repository import Gdk
 
@@ -36,8 +34,6 @@ import rmdWebcamRecord
 import rmdMux
 import dutNewRecording
 
-##  devices = g_udev_client_query_by_subsystem (monitor->priv->client, "video4linux");
-
 
 class Recordmydesktop3:
     def __init__(self):
@@ -49,7 +45,6 @@ class Recordmydesktop3:
         self.projectFile = None
         self.projectLabel = None
         self.listStore = None
-        self.projectEntry = None
         self.spinner = None
         self.buttonBox = None
         self.screen = None
@@ -58,8 +53,13 @@ class Recordmydesktop3:
         self.recordButton = None
         self.mainWindow = None
 
+        self.icon = Gtk.StatusIcon (visible=False)
+        self.icon.set_from_stock (Gtk.STOCK_MEDIA_RECORD)
+        self.icon.connect ("activate", self.stop_record)
+
         self.mainWindow = Gtk.Window(title="Dawati user testing tool",
-                                resizable=False)
+                                     resizable=False,
+                                     icon_name=Gtk.STOCK_MEDIA_RECORD)
         self.mainWindow.connect("destroy", self.on_mainWindow_destroy)
 
         boxLayout = Gtk.VBox (spacing=5, homogeneous=False)
@@ -154,10 +154,13 @@ class Recordmydesktop3:
         boxLayout.pack_start (innerVbox, False, False, 3)
 
         self.mainWindow.add(boxLayout)
+
+
         self.mainWindow.show_all()
         self.spinner.hide ()
 
         self.screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
+#svcreen=self.mainWindow.get_screen ()
 
     def row_activated (col, tree, path, self):
         print ("row activated: "+col.listStore[path][0])
@@ -220,7 +223,7 @@ class Recordmydesktop3:
     def create_new_dir (self):
         self.projectDir = GLib.get_user_special_dir (GLib.USER_DIRECTORY_VIDEOS)
         self.projectDir += "/User-testing/"
-        self.projectDir += self.projectEntry.get_text ()
+        self.projectDir += self.projectLabel.get_text ()
         self.projectDir += datetime.today().strftime("-%d%m%y-at-%H%M")
         GLib.mkdir_with_parents (self.projectDir, 0755)
         print ("Saving to" + self.projectDir)
@@ -230,42 +233,47 @@ class Recordmydesktop3:
 
 
     def encode_button_clicked_cb (self, button):
-#        if button.get_active ():
           self.mux = rmdMux.Muxer(self.projectDir)
           self.mux.record (1)
           button.set_label ("Encoding")
 
     def new_record_button_clicked_cb (self, button):
-#        if button.get_active ():
          newRecording = dutNewRecording.NewRecording (self.configFile, self.mainWindow)
          recordingInfo = newRecording.get_new_recording ()
          if recordingInfo:
-             self.listStore.append ([recordingInfo[0], "today", 0, False, False])
+             self.listStore.append ([recordingInfo[0],
+                                     datetime.today().strftime ("%d/%m/%y %H:%M"),
+                                     0, False, False])
+             self.mainWindow.iconify ()
+             self.icon.set_visible (True)
 
 
+             self.create_new_dir ()
+             self.webcam = rmdWebcamRecord.Webcam(self.projectDir)
 
-#          self.create_new_dir ()
-#          self.webcam = rmdWebcamRecord.Webcam(self.projectDir)
-#
-#          self.spinner.show ()
-#          self.spinner.start ()
-#          self.webcam.record (1)
+             self.webcam.record (1)
           #Wait for the camera to initilise
           #this should run when the webcam gst pipline is running as there is a delay where the webcam is starting
-#          self.rmd = subprocess.Popen (["ffmpeg",
-#                                       "-r", "30",
-#                                       "-s", "1280x1024",
-#                                       "-f", "x11grab",
-#                                       "-i", ":0.0",
-#                                       "-vcodec", "libx264",
-#                                       self.projectDir+"/screencast-rmd.avi"])
-#        else:
-#          button.set_label ("Record")
-#          self.webcam.record (0)
-#          self.rmd.terminate ()
-#          self.spinner.stop ()
- #         self.spinner.hide ()
- #         self.webcam = None
+             self.rmd = subprocess.Popen (["ffmpeg",
+                                           "-r", "30",
+                                           "-s", "1280x1024",
+                                           "-f", "x11grab",
+                                           "-i", ":0.0",
+                                           "-vcodec", "libx264",
+                                           self.projectDir+"/screencast-rmd.avi"])
+
+    def stop_record (self, button):
+        self.webcam.record (0)
+        self.rmd.terminate ()
+        self.spinner.stop ()
+        self.spinner.hide ()
+        self.webcam = None
+
+        #Show the window again
+        self.mainWindow.deiconify ()
+        self.mainWindow.present ()
+        self.icon.set_visible (False)
+
 
 if __name__ == "__main__":
     Recordmydesktop3()
