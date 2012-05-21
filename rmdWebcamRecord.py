@@ -28,7 +28,7 @@ class Webcam:
     def __init__(self, projectDir):
       self.element = gst.parse_launch ("""v4l2src device=/dev/video1 ! queue !
                                        videoflip method=horizontal-flip !
-                                       video/x-raw-yuv,width=1024,height=768,framerate=30/1 ! theoraenc ! queue ! mux. alsasrc ! audio/x-raw-int,rate=48000,channels=1,depth=16 ! queue ! audioconvert ! queue ! vorbisenc ! queue ! mux. oggmux name=mux ! filesink location="""+projectDir+"""/webcam-rmd.ogv""")
+                                       video/x-raw-yuv,width=640,height=480,framerate=30/1 ! theoraenc ! queue ! mux. alsasrc ! audio/x-raw-int,rate=48000,channels=1,depth=16 ! queue ! audioconvert ! queue ! vorbisenc ! queue ! mux. oggmux name=mux ! filesink location="""+projectDir+"""/webcam-rmd.ogv""")
 
       pipebus = self.element.get_bus ()
 

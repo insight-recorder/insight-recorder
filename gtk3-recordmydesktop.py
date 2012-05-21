@@ -34,6 +34,7 @@ import time
 import subprocess
 import rmdWebcamRecord
 import rmdMux
+import dutNewRecording
 
 ##  devices = g_udev_client_query_by_subsystem (monitor->priv->client, "video4linux");
 
@@ -53,10 +54,13 @@ class Recordmydesktop3:
         self.buttonBox = None
         self.screen = None
         self.configFile = GLib.KeyFile()
+        self.encodeButton = None
+        self.recordButton = None
+        self.mainWindow = None
 
-        mainWindow = Gtk.Window(title="Dawati user testing tool",
-                                resizable=True)
-        mainWindow.connect("destroy", self.on_mainWindow_destroy)
+        self.mainWindow = Gtk.Window(title="Dawati user testing tool",
+                                resizable=False)
+        self.mainWindow.connect("destroy", self.on_mainWindow_destroy)
 
         boxLayout = Gtk.VBox (spacing=5, homogeneous=False)
 
@@ -64,10 +68,10 @@ class Recordmydesktop3:
         menu.get_style_context ().add_class (Gtk.STYLE_CLASS_PRIMARY_TOOLBAR)
 
         fileNew = Gtk.ToolButton.new_from_stock ("gtk-new")
-        fileNew.connect ("clicked", self.new_folder_chooser, mainWindow)
+        fileNew.connect ("clicked", self.new_folder_chooser, self.mainWindow)
 
         fileOpen = Gtk.ToolButton.new_from_stock ("gtk-open")
-        fileOpen.connect ("clicked", self.open_file_chooser, mainWindow)
+        fileOpen.connect ("clicked", self.open_file_chooser, self.mainWindow)
 
         menu.insert (fileNew, 0)
         menu.insert (fileOpen, 1)
@@ -76,7 +80,7 @@ class Recordmydesktop3:
 #dummy data str, str, str, bool, bool
 
         self.listStore.append (["Bob and dog", "wefeff3", 5, True, False])
-        self.listStore.append (["Bob and dog1", "foiesjwf", 6, False, False])
+        self.listStore.append (["Bowoifjowejfwoiefjwoefjwoefjoib and dog1", "foiesjwf", 6, False, False])
         self.listStore.append (["Bob and dog2", "wefwef", 7, False, False])
 
 
@@ -86,11 +90,11 @@ class Recordmydesktop3:
         self.projectLabel = Gtk.Label (halign=Gtk.Align.START)
         self.projectLabel.set_markup ("<span style='italic'>No project open</span>")
 
-        recordButton = Gtk.ToggleButton (label="Record")
-        recordButton.connect("toggled", self.button_clicked_cb)
+        self.recordButton = Gtk.Button (label="Create recording")
+        self.recordButton.connect("clicked", self.new_record_button_clicked_cb)
 
-        encodeButton = Gtk.ToggleButton (label="Export", tooltip_text="Encode selected sessions")
-        encodeButton.connect("toggled", self.encode_button_clicked_cb)
+        self.encodeButton = Gtk.Button (label="Export", tooltip_text="Encode selected sessions")
+        self.encodeButton.connect("clicked", self.encode_button_clicked_cb)
 
         recordingDeleteButton = Gtk.Button (label="Delete", tooltip_text="Delete selected sessions")
 
@@ -98,6 +102,8 @@ class Recordmydesktop3:
 
         recordingsView = Gtk.TreeView (model=self.listStore)
         recordingsView.connect ("row-activated", self.row_activated)
+
+#TODO use some kind of ENUM instead of ints for the index of the cols
 
         # Column Recording Name
         recordingTitle = Gtk.CellRendererProgress ()
@@ -127,9 +133,10 @@ class Recordmydesktop3:
         col5 = Gtk.TreeViewColumn ("Delete", recordingDelete, active=4)
         recordingsView.append_column (col5)
 
-        # Box for export and delete buttons
+        # Box for new recording, export and delete buttons
         self.buttonBox = Gtk.HBox (spacing=5, homogeneous=False)
-        self.buttonBox.pack_start (encodeButton, False, False, 3)
+        self.buttonBox.pack_start (self.recordButton, False, False, 3)
+        self.buttonBox.pack_start (self.encodeButton, False, False, 3)
         self.buttonBox.pack_start (recordingDeleteButton, False, False, 3)
 
         # Box for rest of the UI which doesn't span the whole window
@@ -146,18 +153,19 @@ class Recordmydesktop3:
         boxLayout.pack_start (menu, False, False, 3)
         boxLayout.pack_start (innerVbox, False, False, 3)
 
-        mainWindow.add(boxLayout)
-        mainWindow.show_all()
+        self.mainWindow.add(boxLayout)
+        self.mainWindow.show_all()
         self.spinner.hide ()
 
         self.screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
 
     def row_activated (col, tree, path, self):
-        print ("row activated: "+col.listStore[path][1])
+        print ("row activated: "+col.listStore[path][0])
 
     def buttons_x_offset (self, col, cat):
-        self.buttonBox.set_margin_left (col.get_x_offset ())
-
+        (a,b) = self.recordButton.get_preferred_width ()
+        #margin from the edge of the record button minus the padding
+        self.encodeButton.set_margin_left (col.get_x_offset ()-a-10)
 
     def export_toggled (self, widget, path):
         self.listStore[path][3] = not self.listStore[path][3]
@@ -169,8 +177,6 @@ class Recordmydesktop3:
         self.listStore[path][3] = False
         print ("delete toggled")
 
-
-
     def open_file_chooser (self, menuitem, window):
         dialog = Gtk.FileChooserDialog ("Open File",
                                         window,
@@ -181,7 +187,7 @@ class Recordmydesktop3:
         response = dialog.run ()
 
         if response == Gtk.ResponseType.OK:
-            self.projectFile = dialog.get_filename()
+            self.projectFile = dialog.get_filename ()
             error = None
             GLib.KeyFile.load_from_file (self.configFile, self.projectFile, 0,
                                          error)
@@ -200,7 +206,6 @@ class Recordmydesktop3:
                                         Gtk.ResponseType.CANCEL,
                                         Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
 
-
         response = dialog.run ()
 
         if response == Gtk.ResponseType.OK:
@@ -208,7 +213,7 @@ class Recordmydesktop3:
             projectName = GLib.filename_display_basename (self.projectDir)
             self.projectFile = "/"+projectName+".ini"
 
-            self.projectEntry.set_text (projectFile)
+            self.projectLabel.set_text (projectName)
 
         dialog.destroy()
 
@@ -225,36 +230,42 @@ class Recordmydesktop3:
 
 
     def encode_button_clicked_cb (self, button):
-        if button.get_active ():
+#        if button.get_active ():
           self.mux = rmdMux.Muxer(self.projectDir)
           self.mux.record (1)
           button.set_label ("Encoding")
 
-    def button_clicked_cb (self, button):
-        if button.get_active ():
-          button.set_label ("Recording")
-          self.create_new_dir ()
-          self.webcam = rmdWebcamRecord.Webcam(self.projectDir)
+    def new_record_button_clicked_cb (self, button):
+#        if button.get_active ():
+         newRecording = dutNewRecording.NewRecording (self.configFile, self.mainWindow)
+         recordingInfo = newRecording.get_new_recording ()
+         if recordingInfo:
+             self.listStore.append ([recordingInfo[0], "today", 0, False, False])
 
-          self.spinner.show ()
-          self.spinner.start ()
-          self.webcam.record (1)
+
+
+#          self.create_new_dir ()
+#          self.webcam = rmdWebcamRecord.Webcam(self.projectDir)
+#
+#          self.spinner.show ()
+#          self.spinner.start ()
+#          self.webcam.record (1)
           #Wait for the camera to initilise
           #this should run when the webcam gst pipline is running as there is a delay where the webcam is starting
-          self.rmd = subprocess.Popen (["ffmpeg",
-                                       "-r", "30",
-                                       "-s", "1280x1024",
-                                       "-f", "x11grab",
-                                       "-i", ":0.0",
-                                       "-vcodec", "libx264",
-                                       self.projectDir+"/screencast-rmd.avi"])
-        else:
-          button.set_label ("Record")
-          self.webcam.record (0)
-          self.rmd.terminate ()
-          self.spinner.stop ()
-          self.spinner.hide ()
-          self.webcam = None
+#          self.rmd = subprocess.Popen (["ffmpeg",
+#                                       "-r", "30",
+#                                       "-s", "1280x1024",
+#                                       "-f", "x11grab",
+#                                       "-i", ":0.0",
+#                                       "-vcodec", "libx264",
+#                                       self.projectDir+"/screencast-rmd.avi"])
+#        else:
+#          button.set_label ("Record")
+#          self.webcam.record (0)
+#          self.rmd.terminate ()
+#          self.spinner.stop ()
+ #         self.spinner.hide ()
+ #         self.webcam = None
 
 if __name__ == "__main__":
     Recordmydesktop3()
