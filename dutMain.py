@@ -39,17 +39,17 @@ from datetime import datetime
 import time
 
 import subprocess
-import rmdWebcamRecord
-import rmdMux
+import dutWebcamRecord
+import dutMux
 import dutNewRecording
 
 
-class Recordmydesktop3:
+class dutMain:
     def __init__(self):
 
         self.webcam = None
         self.mux = None
-        self.rmd = None
+        self.dut = None
         self.projectDir = None
         self.projectFile = None
         self.projectLabel = None
@@ -240,11 +240,18 @@ class Recordmydesktop3:
     def on_mainWindow_destroy(self, widget):
         Gtk.main_quit()
 
+    def update_progress_bar (self, data):
+        self.mux.pipe_report ()
+ #       print ("progress changed "+ progress)
+  #      if progress == duration:
+   #         return True
+        return True
+
 
     def encode_button_clicked_cb (self, button):
-          self.mux = rmdMux.Muxer(self.projectDir)
+          self.mux = dutMux.Muxer(self.projectDir)
+          GLib.timeout_add_seconds (2, self.update_progress_bar, self)
           self.mux.record (1)
-          button.set_label ("Encoding")
 
     def new_record_button_clicked_cb (self, button):
          newRecording = dutNewRecording.NewRecording (self.configFile, self.mainWindow)
@@ -258,22 +265,23 @@ class Recordmydesktop3:
 
 
              self.create_new_dir ()
-             self.webcam = rmdWebcamRecord.Webcam(self.projectDir)
+             self.webcam = dutWebcamRecord.Webcam(self.projectDir)
 
              self.webcam.record (1)
           #Wait for the camera to initilise
           #this should run when the webcam gst pipline is running as there is a delay where the webcam is starting
-             self.rmd = subprocess.Popen (["ffmpeg",
-                                           "-r", "30",
+            # time.sleep (1)
+             self.dut = subprocess.Popen (["ffmpeg",
+                                           "-r", "15",
                                            "-s", "1280x1024",
                                            "-f", "x11grab",
                                            "-i", ":0.0",
                                            "-vcodec", "libx264",
-                                           self.projectDir+"/screencast-rmd.avi"])
+                                           self.projectDir+"/screencast-dut.avi"])
 
     def stop_record (self, button):
         self.webcam.record (0)
-        self.rmd.terminate ()
+        self.dut.terminate ()
         self.spinner.stop ()
         self.spinner.hide ()
         self.webcam = None
@@ -285,5 +293,5 @@ class Recordmydesktop3:
 
 
 if __name__ == "__main__":
-    Recordmydesktop3()
+    dutMain()
     Gtk.main()
