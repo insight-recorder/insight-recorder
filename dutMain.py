@@ -20,13 +20,22 @@
 #
 
 
-from gi.repository import Gtk
+try:
+    from gi.repository import Gtk
+except ImportError:
+    print ("Gtk3 introspection not found")
+    exit ()
+
+# These are dependencies of Gtk so they should exist if Gtk does
 from gi.repository import GLib
-#for screen res
 from gi.repository import Gdk
 
+try:
+    import gst
+except ImportError:
+    print ("Python gst not found try installing python-gst0.10 or similar")
+
 from datetime import datetime
-#for fun
 import time
 
 import subprocess
