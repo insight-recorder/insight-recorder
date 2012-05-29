@@ -1,0 +1,11 @@
+
+This is a protype application for recording screencasts and webcams simulatenously for running user testing sessions. Use at your own risk.
+
+Required deps
+
+Debain/Ubuntu package names:
+
+- python-gst0.10
+- python-gi
+- gir1.2-gtk-3.0
+- gir1.2-gudev-1.0
