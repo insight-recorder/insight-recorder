@@ -34,6 +34,7 @@ try:
     import gst
 except ImportError:
     print ("Python gst not found try installing python-gst0.10 or similar")
+    exit ()
 
 from datetime import datetime
 import time
