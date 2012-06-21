@@ -140,7 +140,7 @@ class NewRecording:
 
             Gdk.threads_leave ()
 
-    def get_new_recording (self):
+    def get_new_recording_info (self):
         if self.response == Gtk.ResponseType.ACCEPT:
             #TODO also return the result of video source combos
             print (self.recordingTitle)

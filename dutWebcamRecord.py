@@ -28,7 +28,7 @@ class Webcam:
     def __init__(self, projectDir):
       self.element = gst.parse_launch ("""v4l2src device=/dev/video0 ! queue !
                                        videoflip method=horizontal-flip !
-                                       video/x-raw-yuv,width=640,height=480,framerate=30/1 ! theoraenc ! queue ! mux. alsasrc ! audio/x-raw-int,rate=48000,channels=1,depth=16 ! queue ! audioconvert ! queue ! vorbisenc ! queue ! mux. oggmux name=mux ! filesink location="""+projectDir+"""/webcam-rmd.ogv""")
+                                       video/x-raw-yuv,width=640,height=480 ! theoraenc ! queue ! mux. alsasrc ! audio/x-raw-int,rate=48000,channels=1,depth=16 ! queue ! audioconvert ! queue ! vorbisenc ! queue ! mux. oggmux name=mux ! filesink location="""+projectDir+"""/webcam-dut.ogv""")
 
       pipebus = self.element.get_bus ()
 
@@ -36,7 +36,11 @@ class Webcam:
       pipebus.connect ("message", self.pipe1_changed_cb)
 
     def pipe1_changed_cb (self, bus, message):
-      print ("lalal")
+        if message.type == gst.MESSAGE_ERROR:
+            err, debug = message.parse_error()
+            print "Error: %s" % err, debug
+            self.player.set_state(gst.STATE_NULL)
+            self.button.set_label("Start")
 
     def record (self, start):
       if start == 1:

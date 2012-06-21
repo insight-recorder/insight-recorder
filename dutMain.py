@@ -63,6 +63,8 @@ class dutMain:
         self.encodeButton = None
         self.recordButton = None
         self.mainWindow = None
+        self.updateTimer = None
+        self.encodeQueue = []
 
         self.icon = Gtk.StatusIcon (visible=False)
         self.icon.set_from_stock (Gtk.STOCK_MEDIA_RECORD)
@@ -73,7 +75,7 @@ class dutMain:
                                      icon_name=Gtk.STOCK_MEDIA_RECORD)
         self.mainWindow.connect("destroy", self.on_mainWindow_destroy)
 
-        boxLayout = Gtk.VBox (spacing=5, homogeneous=False)
+        outterBoxLayout = Gtk.VBox (spacing=5, homogeneous=False)
 
         menu = Gtk.Toolbar ()
         menu.get_style_context ().add_class (Gtk.STYLE_CLASS_PRIMARY_TOOLBAR)
@@ -93,13 +95,24 @@ class dutMain:
         self.projectLabel = Gtk.Label (halign=Gtk.Align.START)
         self.projectLabel.set_markup ("<span style='italic'>No project open</span>")
 
-        self.recordButton = Gtk.Button (label="Create recording")
+        self.recordButton = Gtk.Button (label="Create recording",
+                                        sensitive=False)
         self.recordButton.connect("clicked", self.new_record_button_clicked_cb)
 
-        self.encodeButton = Gtk.Button (label="Export", tooltip_text="Encode selected sessions")
+        self.encodeButton = Gtk.Button (label="Export",
+                                        tooltip_text="Encode selected sessions",
+                                        sensitive=False)
         self.encodeButton.connect("clicked", self.encode_button_clicked_cb)
 
-        recordingDeleteButton = Gtk.Button (label="Delete", tooltip_text="Delete selected sessions")
+        self.recordingDeleteButton = Gtk.Button (label="Delete",
+                                            tooltip_text="Delete selected sessions",
+                                            sensitive=False)
+
+
+        self.listStore = Gtk.ListStore (str, str, int, bool, bool, int)
+
+        self.listItr = self.listStore.append (["bob", "wefeff3", 5, True, False,
+                                              0])
 
 
         recordingsView = Gtk.TreeView (model=self.listStore)
@@ -153,21 +166,20 @@ class dutMain:
         innerVbox.pack_start (recordingsView, False, False, 3)
         innerVbox.pack_start (self.buttonBox, False, False, 3)
 
+
         # Main container in window
-        boxLayout.pack_start (menu, False, False, 3)
-        boxLayout.pack_start (innerVbox, False, False, 3)
+        outterBoxLayout.pack_start (menu, False, False, 3)
+        outterBoxLayout.pack_start (innerVbox, False, False, 3)
 
-        self.mainWindow.add(boxLayout)
-
-
+        self.mainWindow.add(outterBoxLayout)
         self.mainWindow.show_all()
-        self.spinner.hide ()
 
         self.screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
-#svcreen=self.mainWindow.get_screen ()
 
-    def row_activated (col, tree, path, self):
-        print ("row activated: "+col.listStore[path][0])
+    def row_activated (self, tree, path, col):
+        print ("row activated: "+self.listStore[path][m.TITLE])
+        self.listStore[path][m.PROGRESS] +=10
+
 
     def buttons_x_offset (self, col, cat):
         (a,b) = self.recordButton.get_preferred_width ()
@@ -175,14 +187,22 @@ class dutMain:
         self.encodeButton.set_margin_left (col.get_x_offset ()-a-10)
 
     def export_toggled (self, widget, path):
-        self.listStore[path][3] = not self.listStore[path][3]
-        self.listStore[path][4] = False
+        self.listStore[path][m.EXPORT] = not self.listStore[path][m.EXPORT]
+        #Don't allow export and delete to both be toggled
+        self.listStore[path][m.DELETE] = False
         print ("export doggled")
 
     def delete_toggled (self, widget, path):
-        self.listStore[path][4] = not self.listStore[path][4]
-        self.listStore[path][3] = False
+        self.listStore[path][m.DELETE] = not self.listStore[path][m.DELETE]
+        #Don't allow export and delete to both be toggled
+        self.listStore[path][m.EXPORT] = False
         print ("delete toggled")
+
+    def enable_buttons (self):
+        self.recordButton.set_sensitive (True)
+        self.encodeButton.set_sensitive (True)
+        self.recordingDeleteButton.set_sensitive (True)
+
 
     def open_file_chooser (self, menuitem, window):
         dialog = Gtk.FileChooserDialog ("Open File",
@@ -198,8 +218,11 @@ class dutMain:
             error = None
             GLib.KeyFile.load_from_file (self.configFile, self.projectFile, 0,
                                          error)
+
             if (error):
                 print ("Error loading config file")
+            else:
+                self.enable_buttons ()
 
 
         dialog.destroy()
@@ -221,46 +244,84 @@ class dutMain:
             self.projectFile = "/"+projectName+".ini"
 
             self.projectLabel.set_text (projectName)
+            self.enable_buttons ()
 
         dialog.destroy()
-
-    def create_new_dir (self):
-        self.projectDir = GLib.get_user_special_dir (GLib.USER_DIRECTORY_VIDEOS)
-        self.projectDir += "/User-testing/"
-        self.projectDir += self.projectLabel.get_text ()
-        self.projectDir += datetime.today().strftime("-%d%m%y-at-%H%M")
-        GLib.mkdir_with_parents (self.projectDir, 0755)
-        print ("Saving to" + self.projectDir)
 
     def on_mainWindow_destroy(self, widget):
         Gtk.main_quit()
 
-    def update_progress_bar (self, data):
-        self.mux.pipe_report ()
- #       print ("progress changed "+ progress)
-  #      if progress == duration:
-   #         return True
+    def update_progress_bar (self, encodeItem):
+        percentDone = self.mux.pipe_report ()
+
+        self.listStore.set_value (encodeItem, m.PROGRESS, percentDone)
+
+        if percentDone == 100:
+            if (self.encodeQueue != None):
+                #Allow the system to settle down before starting next
+                time.sleep (3)
+                self.run_encode_queue ()
+            return False
+
         return True
+
+    def create_new_dir (self, timeStamp):
+        recordingDir = self.projectDir
+        recordingDir += "/"+timeStamp+"/"
+        GLib.mkdir_with_parents (recordingDir, 0755)
+        return recordingDir
+
+    def run_encode_queue (self):
+        encodeItem = self.encodeQueue.pop ()
+        #If we've already encoded this item skip it
+        if (self.listStore.get_value (encodeItem, m.PROGRESS == 100)
+            return
+
+        recordingDir = self.projectDir+"/"+self.listStore.get_value (encodeItem, m.DATE)
+        self.mux = dutMux.Muxer (recordingDir)
+        GLib.timeout_add (500, self.update_progress_bar, encodeItem)
+        self.mux.record (1)
 
 
     def encode_button_clicked_cb (self, button):
-          self.mux = dutMux.Muxer(self.projectDir)
-          GLib.timeout_add_seconds (2, self.update_progress_bar, self)
-          self.mux.record (1)
+
+        print (self.listStore.get_value (self.listItr, m.EXPORT))
+        print (self.listStore.get_value (self.listItr, m.TITLE))
+
+        while (self.listItr != None):
+            print (self.listStore.get_value (self.listItr, m.EXPORT))
+            print (self.listStore.get_value (self.listItr, m.TITLE))
+
+            if (self.listStore.get_value (self.listItr, m.EXPORT) == True):
+                #Add item to queue
+                print ("Add " + self.listStore.get_value (self.listItr,
+                                                          m.TITLE) + " to enqueue")
+                self.encodeQueue.append (self.listItr)
+
+            self.listItr = self.listStore.iter_next (self.listItr)
+
+        self.run_encode_queue ()
 
     def new_record_button_clicked_cb (self, button):
-         newRecording = dutNewRecording.NewRecording (self.configFile, self.mainWindow)
-         recordingInfo = newRecording.get_new_recording ()
+         # Open dialog for recording settings
+         timeStamp = datetime.today().strftime("%d-%m-%y-at-%H%M%S")
+
+         newRecording = dutNewRecording.NewRecording (self.configFile,
+                                                      self.mainWindow)
+
+         recordingInfo = newRecording.get_new_recording_info ()
+
          if recordingInfo:
              self.listStore.append ([recordingInfo[0],
-                                     datetime.today().strftime ("%d/%m/%y %H:%M"),
-                                     0, False, False])
+                                     timeStamp,
+                                     0,
+                                     False, False, 0])
              self.mainWindow.iconify ()
              self.icon.set_visible (True)
 
-
-             self.create_new_dir ()
-             self.webcam = dutWebcamRecord.Webcam(self.projectDir)
+             # Create a dir for this recording
+             recordingDir = self.create_new_dir (timeStamp)
+             self.webcam = dutWebcamRecord.Webcam(recordingDir)
 
              self.webcam.record (1)
           #Wait for the camera to initilise
@@ -272,7 +333,7 @@ class dutMain:
                                            "-f", "x11grab",
                                            "-i", ":0.0",
                                            "-vcodec", "libx264",
-                                           self.projectDir+"/screencast-dut.avi"])
+                                           recordingDir+"/screencast-dut.avi"])
 
     def stop_record (self, button):
         self.webcam.record (0)
