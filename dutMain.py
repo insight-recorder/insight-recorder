@@ -57,7 +57,6 @@ class dutMain:
         self.projectFile = None
         self.projectLabel = None
         self.listStore = None
-        self.spinner = None
         self.buttonBox = None
         self.screen = None
         self.configFile = GLib.KeyFile()
@@ -88,14 +87,6 @@ class dutMain:
         menu.insert (fileNew, 0)
         menu.insert (fileOpen, 1)
 
-        self.listStore = Gtk.ListStore (str, str, int, bool, bool)
-#dummy data str, str, str, bool, bool
-
-        self.listStore.append (["Bob and dog", "wefeff3", 5, True, False])
-        self.listStore.append (["Bowoifjowejfwoiefjwoefjwoefjoib and dog1", "foiesjwf", 6, False, False])
-        self.listStore.append (["Bob and dog2", "wefwef", 7, False, False])
-
-
         dateLabel = Gtk.Label ("Date")
         durationLabel = Gtk.Label ("Duration")
 
@@ -110,7 +101,6 @@ class dutMain:
 
         recordingDeleteButton = Gtk.Button (label="Delete", tooltip_text="Delete selected sessions")
 
-        self.spinner = Gtk.Spinner ()
 
         recordingsView = Gtk.TreeView (model=self.listStore)
         recordingsView.connect ("row-activated", self.row_activated)
@@ -151,7 +141,7 @@ class dutMain:
         self.buttonBox = Gtk.HBox (spacing=5, homogeneous=False)
         self.buttonBox.pack_start (self.recordButton, False, False, 3)
         self.buttonBox.pack_start (self.encodeButton, False, False, 3)
-        self.buttonBox.pack_start (recordingDeleteButton, False, False, 3)
+        self.buttonBox.pack_start (self.recordingDeleteButton, False, False, 3)
 
         # Box for rest of the UI which doesn't span the whole window
         innerVbox = Gtk.VBox (spacing=5,
@@ -287,8 +277,6 @@ class dutMain:
     def stop_record (self, button):
         self.webcam.record (0)
         self.dut.terminate ()
-        self.spinner.stop ()
-        self.spinner.hide ()
         self.webcam = None
 
         #Show the window again
