@@ -44,6 +44,8 @@ import dutWebcamRecord
 import dutMux
 import dutNewRecording
 
+class m:
+    TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS = range (6)
 
 class dutMain:
     def __init__(self):
@@ -113,34 +115,36 @@ class dutMain:
         recordingsView = Gtk.TreeView (model=self.listStore)
         recordingsView.connect ("row-activated", self.row_activated)
 
-#TODO use some kind of ENUM instead of ints for the index of the cols
-
         # Column Recording Name
         recordingTitle = Gtk.CellRendererProgress ()
-        col1 = Gtk.TreeViewColumn ("Recording name", recordingTitle, text=0)
+        col1 = Gtk.TreeViewColumn ("Recording name",
+                                   recordingTitle,
+                                   text=m.TITLE,
+                                   value=m.PROGRESS)
         recordingsView.append_column (col1)
 
         # Column Date
         recordingDate = Gtk.CellRendererText ()
-        col2 = Gtk.TreeViewColumn ("Date", recordingDate, text=1)
+        col2 = Gtk.TreeViewColumn ("Date", recordingDate, text=m.DATE)
         recordingsView.append_column (col2)
 
         # Column Duration
         recordingDuration = Gtk.CellRendererText (xalign=0.5)
-        col3 = Gtk.TreeViewColumn ("Duration", recordingDuration, text=2)
+        col3 = Gtk.TreeViewColumn ("Duration", recordingDuration,
+                                   text=m.DURATION)
         recordingsView.append_column (col3)
 
         # Column for export
         recordingExport = Gtk.CellRendererToggle (xalign=0)
         recordingExport.connect ("toggled", self.export_toggled)
-        col4 = Gtk.TreeViewColumn ("Export", recordingExport, active=3)
+        col4 = Gtk.TreeViewColumn ("Export", recordingExport, active=m.EXPORT)
         recordingsView.append_column (col4)
         col4.connect ("notify::x-offset", self.buttons_x_offset)
 
         # Column for delete
         recordingDelete = Gtk.CellRendererToggle (xalign=0)
         recordingDelete.connect ("toggled", self.delete_toggled)
-        col5 = Gtk.TreeViewColumn ("Delete", recordingDelete, active=4)
+        col5 = Gtk.TreeViewColumn ("Delete", recordingDelete, active=m.DELETE)
         recordingsView.append_column (col5)
 
         # Box for new recording, export and delete buttons
