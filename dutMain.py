@@ -274,7 +274,7 @@ class dutMain:
     def run_encode_queue (self):
         encodeItem = self.encodeQueue.pop ()
         #If we've already encoded this item skip it
-        if (self.listStore.get_value (encodeItem, m.PROGRESS == 100)
+        if (self.listStore.get_value (encodeItem, m.PROGRESS == 100)):
             return
 
         recordingDir = self.projectDir+"/"+self.listStore.get_value (encodeItem, m.DATE)
@@ -284,9 +284,6 @@ class dutMain:
 
 
     def encode_button_clicked_cb (self, button):
-
-        print (self.listStore.get_value (self.listItr, m.EXPORT))
-        print (self.listStore.get_value (self.listItr, m.TITLE))
 
         while (self.listItr != None):
             print (self.listStore.get_value (self.listItr, m.EXPORT))
