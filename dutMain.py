@@ -59,7 +59,7 @@ class dutMain:
         self.listStore = None
         self.buttonBox = None
         self.screen = None
-        self.configFile = GLib.KeyFile()
+#        self.configFile = GLib.KeyFile()
         self.encodeButton = None
         self.recordButton = None
         self.mainWindow = None
@@ -214,8 +214,8 @@ class dutMain:
         if response == Gtk.ResponseType.OK:
             self.projectFile = dialog.get_filename ()
             error = None
-            GLib.KeyFile.load_from_file (self.configFile, self.projectFile, 0,
-                                         error)
+#            GLib.KeyFile.load_from_file (self.configFile, self.projectFile, 0,
+                  #                       error)
 
             if (error):
                 print ("Error loading config file")
