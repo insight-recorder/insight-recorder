@@ -65,6 +65,7 @@ class dutMain:
         self.mainWindow = None
         self.updateTimer = None
         self.encodeQueue = []
+        self.listItr = None
 
         self.icon = Gtk.StatusIcon (visible=False)
         self.icon.set_from_stock (Gtk.STOCK_MEDIA_RECORD)
@@ -110,9 +111,6 @@ class dutMain:
 
 
         self.listStore = Gtk.ListStore (str, str, int, bool, bool, int)
-
-        self.listItr = self.listStore.append (["bob", "wefeff3", 5, True, False,
-                                              0])
 
 
         recordingsView = Gtk.TreeView (model=self.listStore)
@@ -273,31 +271,36 @@ class dutMain:
 
     def run_encode_queue (self):
         encodeItem = self.encodeQueue.pop ()
+        print ("run encode queue")
         #If we've already encoded this item skip it
-        if (self.listStore.get_value (encodeItem, m.PROGRESS == 100)):
+        if (self.listStore.get_value (encodeItem, m.PROGRESS) == 100):
             return
 
         recordingDir = self.projectDir+"/"+self.listStore.get_value (encodeItem, m.DATE)
         self.mux = dutMux.Muxer (recordingDir)
         GLib.timeout_add (500, self.update_progress_bar, encodeItem)
+        print ("run muxer")
         self.mux.record (1)
 
 
     def encode_button_clicked_cb (self, button):
 
-        while (self.listItr != None):
-            print (self.listStore.get_value (self.listItr, m.EXPORT))
-            print (self.listStore.get_value (self.listItr, m.TITLE))
+        listItr = self.listStore.get_iter_first ()
 
-            if (self.listStore.get_value (self.listItr, m.EXPORT) == True):
+        while (listItr != None):
+            print (self.listStore.get_value (listItr, m.EXPORT))
+            print (self.listStore.get_value (listItr, m.TITLE))
+
+            if (self.listStore.get_value (listItr, m.EXPORT) == True):
                 #Add item to queue
-                print ("Add " + self.listStore.get_value (self.listItr,
+                print ("Add " + self.listStore.get_value (listItr,
                                                           m.TITLE) + " to enqueue")
-                self.encodeQueue.append (self.listItr)
+                self.encodeQueue.append (listItr)
 
-            self.listItr = self.listStore.iter_next (self.listItr)
+            listItr = self.listStore.iter_next (listItr)
 
-        self.run_encode_queue ()
+        if (self.encodeQueue != None):
+            self.run_encode_queue ()
 
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
@@ -313,6 +316,7 @@ class dutMain:
                                      timeStamp,
                                      0,
                                      False, False, 0])
+
              self.mainWindow.iconify ()
              self.icon.set_visible (True)
 
@@ -321,9 +325,9 @@ class dutMain:
              self.webcam = dutWebcamRecord.Webcam(recordingDir)
 
              self.webcam.record (1)
-          #Wait for the camera to initilise
-          #this should run when the webcam gst pipline is running as there is a delay where the webcam is starting
-            # time.sleep (1)
+             #Wait for the camera to initilise
+             #this should run when the webcam gst pipline is running as there is a delay where the webcam is starting
+             time.sleep (1)
              self.dut = subprocess.Popen (["ffmpeg",
                                            "-r", "15",
                                            "-s", "1280x1024",
