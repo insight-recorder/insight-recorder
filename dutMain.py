@@ -59,7 +59,8 @@ class dutMain:
         self.listStore = None
         self.buttonBox = None
         self.screen = None
-#        self.configFile = GLib.KeyFile()
+        #GLib.KeyFile causes memory errors in some versions of the bindings
+        self.configFile = None #GLib.KeyFile()
         self.encodeButton = None
         self.recordButton = None
         self.mainWindow = None
