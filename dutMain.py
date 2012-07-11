@@ -173,7 +173,6 @@ class dutMain:
         self.mainWindow.add(outterBoxLayout)
         self.mainWindow.show_all()
 
-        self.screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
 
     def row_activated (self, tree, path, col):
         print ("row activated: "+self.listStore[path][m.TITLE])
@@ -313,6 +312,10 @@ class dutMain:
          recordingInfo = newRecording.get_new_recording_info ()
 
          if recordingInfo:
+             screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
+             screenH = str (screen.get_height ())
+             screenW = str (screen.get_width ())
+
              self.listStore.append ([recordingInfo[0],
                                      timeStamp,
                                      0,
@@ -331,7 +334,7 @@ class dutMain:
              time.sleep (1)
              self.dut = subprocess.Popen (["ffmpeg",
                                            "-r", "15",
-                                           "-s", "1280x1024",
+                                           "-s", screenW+"x"+screenH,
                                            "-f", "x11grab",
                                            "-i", ":0.0",
                                            "-vcodec", "libx264",

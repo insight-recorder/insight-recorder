@@ -19,9 +19,8 @@
 # along with this program; if not, see <http://www.gnu.org/licenses>
 #
 
-#TODO  work out the co-ords of the bottom right corner of the screencast
-
 from gi.repository import GLib
+from gi.repository import Gdk
 import gst
 import time
 import subprocess
@@ -30,7 +29,12 @@ class Muxer:
     def __init__(self, projectDir):
 
       self.projectDir = projectDir
-      self.element = gst.parse_launch ("filesrc location="+projectDir+"/webcam-dut.ogv ! oggdemux name=demux1 ! queue ! theoradec ! videoscale ! video/x-raw-yuv,width=320,height=240 ! queue ! videomixer name=mix sink_0::xpos=0 sink_0::ypos=0 sink_1::xpos=960 sink_1::ypos=784 ! theoraenc ! oggmux name=outmix ! filesink location="+projectDir+"/user-testing.ogv         filesrc location="+projectDir+"/screencast-dut.avi ! avidemux name=demux2 ! queue ! ffdec_h264  ! mix. ");
+
+      screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
+      posY = str (screen.get_height () - 240)
+      posX = str (screen.get_width () - 320)
+
+      self.element = gst.parse_launch ("filesrc location="+projectDir+"/webcam-dut.ogv ! oggdemux name=demux1 ! queue ! theoradec ! videoscale ! video/x-raw-yuv,width=320,height=240 ! queue ! videomixer name=mix sink_0::xpos=0 sink_0::ypos=0 sink_1::xpos="+posX+" sink_1::ypos="+posY+" ! theoraenc ! oggmux name=outmix ! filesink location="+projectDir+"/user-testing.ogv         filesrc location="+projectDir+"/screencast-dut.avi ! avidemux name=demux2 ! queue ! ffdec_h264  ! mix. ");
 
       pipebus = self.element.get_bus ()
 

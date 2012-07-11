@@ -92,13 +92,20 @@ class NewRecording:
 
     def video_preview (self):
 
+
+        screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
+        posY = str (screen.get_height () - 240)
+        posX = str (screen.get_width () - 320)
+
+
+
         self.player =gst.parse_launch ("""v4l2src device=/dev/video0 !
                                        videoscale ! queue ! videoflip
                                        method=horizontal-flip !
-                                       video/x-raw-yuv,height=480,framerate=15/1
+                                       video/x-raw-yuv,height=240,framerate=15/1
                                        ! videomixer name=mix sink_0::xpos=0
-                                       sink_0::ypos=0 sink_1::xpos=0
-                                       sink_1::ypos=0 sink_1::ypos=0 !
+                                       sink_0::ypos=0 sink_1::xpos="""+posX+"""
+                                       sink_1::ypos="""+posY+""" !
                                        xvimagesink  sync=false       ximagesrc
                                        use-damage=false show-pointer=true  !
                                        videoscale ! video/x-raw-rgb,framerate=15/1 ! ffmpegcolorspace ! video/x-raw-yuv ! mix.""")
