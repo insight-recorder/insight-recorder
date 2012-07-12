@@ -34,7 +34,23 @@ class Muxer:
       posY = str (screen.get_height () - 240)
       posX = str (screen.get_width () - 320)
 
-      self.element = gst.parse_launch ("filesrc location="+projectDir+"/webcam-dut.ogv ! oggdemux name=demux1 ! queue ! theoradec ! videoscale ! video/x-raw-yuv,width=320,height=240 ! queue ! videomixer name=mix sink_0::xpos=0 sink_0::ypos=0 sink_1::xpos="+posX+" sink_1::ypos="+posY+" ! theoraenc ! oggmux name=outmix ! filesink location="+projectDir+"/user-testing.ogv         filesrc location="+projectDir+"/screencast-dut.avi ! avidemux name=demux2 ! queue ! ffdec_h264  ! mix. ");
+      self.element = gst.parse_launch ("""filesrc
+                                       location="""+projectDir+"""/webcam-dut.webm !
+                                       matroskademux name=demux1 ! queue !
+                                       vp8dec ! videorate !
+                                       video/x-raw-yuv,width=320,height=240,framerate=15/1 !
+                                       queue ! videomixer name=mix
+                                       sink_0::xpos=0 sink_0::ypos=0
+                                       sink_1::xpos="""+posX+"""
+                                       sink_1::ypos="""+posY+""" ! vp8enc
+                                       quality=10 speed=2 threads=4 ! webmmux
+                                       name=outmix ! filesink
+                                       location="""+projectDir+"""/user-testing.webm
+                                       filesrc
+                                       location="""+projectDir+"""/screencast-dut.avi
+                                       ! avidemux name=demux2 ! queue !
+                                       ffdec_h264 ! videorate !
+                                       video/x-raw-yuv,framerate=15/1 ! mix. """);
 
       pipebus = self.element.get_bus ()
 
@@ -42,7 +58,16 @@ class Muxer:
       pipebus.connect ("message", self.pipe1_changed_cb)
 
       #second pass add audio - we could do this in the above pipeline but due to a bug it doesn't quite work..
-      self.element2 = gst.parse_launch ("filesrc location="+projectDir+"/user-testing.ogv ! oggdemux name=demux filesrc location="+projectDir+"/webcam-dut.ogv ! oggdemux name=audiodemux ! vorbisparse ! audio/x-vorbis ! oggmux name=outmux ! filesink location="+projectDir+"/final.ogv demux. ! theoraparse ! video/x-theora ! outmux.")
+      self.element2 = gst.parse_launch ("""filesrc
+                                        location="""+projectDir+"""/user-testing.webm
+                                        ! matroskademux name=demux filesrc
+                                        location="""+projectDir+"""/webcam-dut.webm
+                                        ! matroskademux name=audiodemux ! vorbisparse
+                                        ! audio/x-vorbis ! oggmux name=outmux !
+                                        filesink
+                                        location="""+projectDir+"""/final.ogv demux.
+                                        ! video/x-vp8 !
+                                        outmux.""")
       pipebus2 = self.element2.get_bus ()
 
       pipebus2.add_signal_watch ()

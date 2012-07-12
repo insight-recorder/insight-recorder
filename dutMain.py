@@ -329,9 +329,8 @@ class dutMain:
              self.webcam = dutWebcamRecord.Webcam(recordingDir)
 
              self.webcam.record (1)
-             #Wait for the camera to initilise
+             #TODO Wait for the camera to initilise
              #this should run when the webcam gst pipline is running as there is a delay where the webcam is starting
-             time.sleep (1)
              self.dut = subprocess.Popen (["ffmpeg",
                                            "-r", "15",
                                            "-s", screenW+"x"+screenH,

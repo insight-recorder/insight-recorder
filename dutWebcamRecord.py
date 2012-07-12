@@ -28,8 +28,8 @@ class Webcam:
     def __init__(self, projectDir):
       self.element = gst.parse_launch ("""v4l2src device=/dev/video0 ! queue !
                                        videoflip method=horizontal-flip !
-                                       video/x-raw-yuv,width=640,height=480 !
-                                       vp8enc ! queue ! mux. alsasrc !
+                                       video/x-raw-yuv,width=320,height=240 !
+                                       vp8enc quality=7 speed=2 ! queue ! mux. alsasrc !
                                        audio/x-raw-int,rate=48000,channels=1,depth=16
                                        ! queue ! audioconvert ! queue !
                                        vorbisenc ! queue ! mux. webmmux name=mux
