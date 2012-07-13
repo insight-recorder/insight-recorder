@@ -21,20 +21,16 @@
 
 import gst
 
-##  devices = g_udev_client_query_by_subsystem (monitor->priv->client, "video4linux");
 
-
-class Webcam:
+class Screencast:
     def __init__(self, projectDir):
-      self.element = gst.parse_launch ("""v4l2src device=/dev/video0 ! queue !
-                                       videoflip method=horizontal-flip !
-                                       video/x-raw-yuv,width=320,height=240 !
-                                       vp8enc mode=1 quality=7 speed=2 ! queue ! mux. alsasrc !
-                                       audio/x-raw-int,rate=48000,channels=1,depth=16
-                                       ! queue ! audioconvert ! queue !
-                                       vorbisenc ! queue ! mux. webmmux name=mux
-                                       ! filesink
-                                       location="""+projectDir+"""/webcam-dut.webm""")
+      self.element = gst.parse_launch ("""ximagesrc ! queue !
+                                       video/x-raw-rgb,framerate=15/1 !
+                                       ffmpegcolorspace !
+                                       video/x-raw-yuv,framerate=15/1 ! vp8enc
+                                       quality=8 threads=2 speed=2 mode=1 ! webmmux !
+                                       filesink
+                                       location="""+projectDir+"""/screencast-dut.webm""")
 
       pipebus = self.element.get_bus ()
 
@@ -52,9 +48,9 @@ class Webcam:
 
     def record (self, start):
       if start == 1:
-        print ("Start record")
+        print ("Start screencast record")
         self.element.set_state (gst.STATE_PLAYING)
       else:
-        print ("stop record")
+        print ("stop screencast record")
         self.element.send_event (gst.event_new_eos ())
 

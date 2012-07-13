@@ -42,6 +42,7 @@ import time
 
 import subprocess
 import dutWebcamRecord
+import dutScreencastRecord
 import dutMux
 import dutNewRecording
 
@@ -52,6 +53,7 @@ class dutMain:
     def __init__(self):
 
         self.webcam = None
+        self.screencast = None
         self.mux = None
         self.dut = None
         self.projectDir = None
@@ -329,23 +331,18 @@ class dutMain:
 
              # Create a dir for this recording
              recordingDir = self.create_new_dir (timeStamp)
-             self.webcam = dutWebcamRecord.Webcam(recordingDir)
+             self.webcam = dutWebcamRecord.Webcam (recordingDir)
+             self.screencast = dutScreencastRecord.Screencast (recordingDir)
 
              self.webcam.record (1)
-             #TODO Wait for the camera to initilise
-             #this should run when the webcam gst pipline is running as there is a delay where the webcam is starting
-             self.dut = subprocess.Popen (["ffmpeg",
-                                           "-r", "15",
-                                           "-s", screenW+"x"+screenH,
-                                           "-f", "x11grab",
-                                           "-i", ":0.0",
-                                           "-vcodec", "libx264",
-                                           recordingDir+"/screencast-dut.avi"])
+             self.screencast.record (1)
 
     def stop_record (self, button):
         self.webcam.record (0)
-        self.dut.terminate ()
+        self.screencast.record (0)
+        #self.dut.terminate ()
         self.webcam = None
+        self.screencast = None
 
         #Show the window again
         self.mainWindow.deiconify ()

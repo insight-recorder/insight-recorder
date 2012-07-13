@@ -37,7 +37,7 @@ class Muxer:
       self.element = gst.parse_launch ("""filesrc
                                        location="""+projectDir+"""/webcam-dut.webm !
                                        matroskademux name=demux1 ! queue !
-                                       vp8dec ! videorate !
+                                       vp8dec ! videorate force-fps=15 !
                                        video/x-raw-yuv,width=320,height=240,framerate=15/1 !
                                        queue ! videomixer name=mix
                                        sink_0::xpos=0 sink_0::ypos=0
@@ -47,9 +47,9 @@ class Muxer:
                                        name=outmix ! filesink
                                        location="""+projectDir+"""/user-testing.webm
                                        filesrc
-                                       location="""+projectDir+"""/screencast-dut.avi
-                                       ! avidemux name=demux2 ! queue !
-                                       ffdec_h264 ! videorate !
+                                       location="""+projectDir+"""/screencast-dut.webm
+                                       ! matroskademux name=demux2 ! queue !
+                                       vp8dec ! videorate force-fps=15 !
                                        video/x-raw-yuv,framerate=15/1 ! mix. """);
 
       pipebus = self.element.get_bus ()
