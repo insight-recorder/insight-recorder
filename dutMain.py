@@ -29,6 +29,7 @@ except ImportError:
 # These are dependencies of Gtk so they should exist if Gtk does
 from gi.repository import GLib
 from gi.repository import Gdk
+from gi.repository import Gio
 
 try:
     import gst
@@ -175,8 +176,10 @@ class dutMain:
 
 
     def row_activated (self, tree, path, col):
+        if self.listStore[path][m.PROGRESS] == 100:
+            Gio.AppInfo.launch_default_for_uri ("""file:///"""+self.projectDir+"""/"""+self.listStore[path][m.DATE]+"""/user-testing.webm""", None)
+
         print ("row activated: "+self.listStore[path][m.TITLE])
-        self.listStore[path][m.PROGRESS] +=10
 
 
     def buttons_x_offset (self, col, cat):
