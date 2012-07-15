@@ -44,13 +44,13 @@ class Muxer:
                                        sink_1::xpos="""+posX+"""
                                        sink_1::ypos="""+posY+""" ! vp8enc
                                        quality=10 speed=2 threads=4 ! webmmux
-                                       name=outmix ! filesink
+                                       name=outmux !
+                                       filesink
                                        location="""+projectDir+"""/user-testing.webm
-                                       filesrc
-                                       location="""+projectDir+"""/screencast-dut.webm
+                                       filesrc location="""+projectDir+"""/screencast-dut.webm
                                        ! matroskademux name=demux2 ! queue !
                                        vp8dec ! videorate force-fps=15 !
-                                       video/x-raw-yuv,framerate=15/1 ! mix. """);
+                                       video/x-raw-yuv,framerate=15/1 ! mix.""")
 
       pipebus = self.element.get_bus ()
 
@@ -59,15 +59,15 @@ class Muxer:
 
       #second pass add audio - we could do this in the above pipeline but due to a bug it doesn't quite work..
       self.element2 = gst.parse_launch ("""filesrc
-                                        location="""+projectDir+"""/user-testing.webm
-                                        ! matroskademux name=demux filesrc
-                                        location="""+projectDir+"""/webcam-dut.webm
-                                        ! matroskademux name=audiodemux ! vorbisparse
-                                        ! audio/x-vorbis ! oggmux name=outmux !
-                                        filesink
-                                        location="""+projectDir+"""/final.ogv demux.
-                                        ! video/x-vp8 !
-                                        outmux.""")
+                                        location="""+projectDir+"""/webcam-dut.webm ! queue !
+                                        matroskademux ! vorbisparse !
+                                        audio/x-vorbis !  queue ! outmux.audio_0
+                                        filesrc location="""+projectDir+"""/user-testing.webm !
+                                        queue ! matroskademux ! video/x-vp8 !
+                                        queue ! outmux.video_0 webmmux
+                                        name=outmux ! filesink name=sinker
+                                        location="""+projectDir+"""/final.webm""")
+
       pipebus2 = self.element2.get_bus ()
 
       pipebus2.add_signal_watch ()
