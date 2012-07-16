@@ -23,7 +23,7 @@
 try:
     from gi.repository import Gtk
 except ImportError:
-    print ("Gtk3 introspection not found")
+    print ("Gtk3 introspection not found try installing gir-gtk-3.0 or similar")
     exit ()
 
 # These are dependencies of Gtk so they should exist if Gtk does
@@ -34,7 +34,7 @@ from gi.repository import Gio
 try:
     import gst
 except ImportError:
-    print ("Python gst not found try installing python-gst0.10 or similar")
+    print ("Python gst not found try installing python-gst or similar")
     exit ()
 
 from datetime import datetime
@@ -101,6 +101,7 @@ class dutMain:
         self.projectLabel.set_markup ("<span style='italic'>No project open</span>")
 
         self.recordButton = Gtk.Button (label="Create recording",
+                                        tooltip_text="Create a new recording",
                                         sensitive=False)
         self.recordButton.connect("clicked", self.new_record_button_clicked_cb)
 
@@ -179,7 +180,7 @@ class dutMain:
 
     def row_activated (self, tree, path, col):
         if self.listStore[path][m.PROGRESS] == 100:
-            Gio.AppInfo.launch_default_for_uri ("""file:///"""+self.projectDir+"""/"""+self.listStore[path][m.DATE]+"""/user-testing.webm""", None)
+            Gio.AppInfo.launch_default_for_uri ("""file:///"""+self.projectDir+"""/"""+self.listStore[path][m.DATE]+"""/final.webm""", None)
 
         print ("row activated: "+self.listStore[path][m.TITLE])
 
@@ -246,7 +247,7 @@ class dutMain:
             projectName = GLib.filename_display_basename (self.projectDir)
             self.projectFile = "/"+projectName+".ini"
 
-            self.projectLabel.set_text (projectName)
+            self.projectLabel.set_text ("Project: "+projectName)
             self.enable_buttons ()
 
         dialog.destroy()
