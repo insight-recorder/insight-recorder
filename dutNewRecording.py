@@ -97,9 +97,7 @@ class NewRecording:
         posY = str (screen.get_height () - 240)
         posX = str (screen.get_width () - 320)
 
-
-
-        self.player =gst.parse_launch ("""v4l2src device=/dev/video0 !
+        self.player = gst.parse_launch ("""v4l2src device=/dev/video0 name="cam" !
                                        videoscale ! queue ! videoflip
                                        method=horizontal-flip !
                                        video/x-raw-yuv,height=240,framerate=15/1

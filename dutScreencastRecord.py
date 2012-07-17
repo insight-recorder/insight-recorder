@@ -24,11 +24,13 @@ import gst
 
 class Screencast:
     def __init__(self, projectDir):
-      self.element = gst.parse_launch ("""ximagesrc ! queue !
+      self.element = gst.parse_launch ("""ximagesrc ! queue ! videorate
+                                       force-fps=15/1 !
                                        video/x-raw-rgb,framerate=15/1 !
                                        ffmpegcolorspace !
                                        video/x-raw-yuv,framerate=15/1 ! vp8enc
-                                       quality=8 threads=2 speed=2 mode=1 ! webmmux !
+                                       quality=8 threads=2 speed=2 mode=1 !
+                                       queue ! webmmux !
                                        filesink
                                        location="""+projectDir+"""/screencast-dut.webm""")
 

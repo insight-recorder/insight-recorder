@@ -26,7 +26,8 @@ import gst
 
 class Webcam:
     def __init__(self, projectDir):
-      self.element = gst.parse_launch ("""v4l2src device=/dev/video0 ! queue !
+      self.element = gst.parse_launch ("""v4l2src device=/dev/video0 ! videorate
+                                       force-fps=15/1 ! queue !
                                        videoflip method=horizontal-flip !
                                        video/x-raw-yuv,width=320,height=240 !
                                        vp8enc mode=1 quality=7 speed=2 ! queue ! mux. alsasrc !
