@@ -22,13 +22,10 @@
 import gst
 import time
 
-#TODO get devices for capture sources
-#from gi.repository import GUdev
-#devices g_udev_client_query_by_subsystem (monitor->priv->client, "video4linux");
-
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GdkX11
+from gi.repository import GUdev
 Gdk.threads_init ()
 
 class NewRecording:
@@ -48,16 +45,33 @@ class NewRecording:
         accept = self.dialog.add_button ("Start recording", Gtk.ResponseType.ACCEPT)
 
         # UI Elements for create recording dialog
-        label = Gtk.Label ("Recording name:")
+        label = Gtk.Label (label="Recording name:", halign=Gtk.Align.START)
         entry = Gtk.Entry ()
         primaryCapture = Gtk.ComboBoxText ()
+        primaryCapture.connect ("changed", self.primary_capture_changed)
         primaryCapture.set_title ("Primary Capture")
+        primaryCapture.append_text ("Screen")
+        primaryCaptureLabel = Gtk.Label ("Primary capture:")
 
         secondaryCapture = Gtk.ComboBoxText ()
+        secondaryCapture.connect ("changed", self.secondary_capture_changed)
         secondaryCapture.set_title ("Secondary Capture")
 
+        #Add available video4linux devices
+        devices = GUdev.Client ().query_by_subsystem ("video4linux")
+
+        for device in devices:
+            secondaryCapture.append_text (device.get_name ())
+
+        secondaryCaptureLabel = Gtk.Label ("Secondary capture:")
+
+#        primaryCapture.set_active (0)
+#        secondaryCapture.set_active (0)
+
         devicesBox = Gtk.HBox ()
+        devicesBox.pack_start (primaryCaptureLabel, False, False, 3)
         devicesBox.pack_start (primaryCapture, False, False, 3)
+        devicesBox.pack_start (secondaryCaptureLabel, False, False, 3)
         devicesBox.pack_start (secondaryCapture, False, False, 3)
 
         self.playerWindow = Gtk.DrawingArea ()
@@ -65,11 +79,21 @@ class NewRecording:
         self.playerWindow.set_size_request (600, 300)
         self.playerWindow.connect ("realize", self.window_real)
 
+
+        audioToggle = Gtk.Switch ()
+        audioSource = Gtk.ComboBoxText ()
+
+
+        audioBox = Gtk.HBox ()
+
+
         contentArea = self.dialog.get_content_area ()
+        contentArea.set_spacing (8)
         contentArea.add (label)
         contentArea.add (entry)
         contentArea.add (devicesBox)
         contentArea.add (self.playerWindow)
+        contentArea.add (audioBox)
 
         contentArea.show_all ()
 
@@ -84,6 +108,25 @@ class NewRecording:
         self.player.get_bus ().disconnect (self.busSig2)
         self.player = None
         self.dialog.destroy ()
+
+    def secondary_capture_changed (self, combo):
+        print ("secondary changed")
+        text = combo.get_active_text ()
+        #TEMP TODO HACK
+        if text != "Screen":
+             v4l = self.player.get_by_name ("cam")
+             print ("set device property2")
+             self.player.set_state (gst.STATE_READY)
+             v4l.set_state (gst.STATE_NULL)
+             v4l.set_property ("device", "/dev/"+text)
+             self.player.set_state (gst.STATE_PLAYING)
+
+
+
+    def primary_capture_changed (self, combo):
+        print ("primary changed")
+
+
 
 
     def window_real (self,wef2):
