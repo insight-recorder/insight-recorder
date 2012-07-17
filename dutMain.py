@@ -86,9 +86,11 @@ class dutMain:
         menu.get_style_context ().add_class (Gtk.STYLE_CLASS_PRIMARY_TOOLBAR)
 
         fileNew = Gtk.ToolButton.new_from_stock ("gtk-new")
+        fileNew.set_label ("New project")
         fileNew.connect ("clicked", self.new_folder_chooser, self.mainWindow)
 
         fileOpen = Gtk.ToolButton.new_from_stock ("gtk-open")
+        fileNew.set_label ("Open project")
         fileOpen.connect ("clicked", self.open_file_chooser, self.mainWindow)
 
         menu.insert (fileNew, 0)
@@ -122,7 +124,7 @@ class dutMain:
         recordingsView.connect ("row-activated", self.row_activated)
 
         # Column Recording Name
-        recordingTitle = Gtk.CellRendererProgress ()
+        recordingTitle = Gtk.CellRendererProgress (text_xalign=0)
         col1 = Gtk.TreeViewColumn ("Recording name",
                                    recordingTitle,
                                    text=m.TITLE,
@@ -135,20 +137,20 @@ class dutMain:
         recordingsView.append_column (col2)
 
         # Column Duration
-        recordingDuration = Gtk.CellRendererText (xalign=0.5)
+        recordingDuration = Gtk.CellRendererText (xalign=0)
         col3 = Gtk.TreeViewColumn ("Duration", recordingDuration,
                                    text=m.DURATION)
         recordingsView.append_column (col3)
 
         # Column for export
-        recordingExport = Gtk.CellRendererToggle (xalign=0)
+        recordingExport = Gtk.CellRendererToggle (xalign=0.5)
         recordingExport.connect ("toggled", self.export_toggled)
         col4 = Gtk.TreeViewColumn ("Export", recordingExport, active=m.EXPORT)
         recordingsView.append_column (col4)
         col4.connect ("notify::x-offset", self.buttons_x_offset)
 
         # Column for delete
-        recordingDelete = Gtk.CellRendererToggle (xalign=0)
+        recordingDelete = Gtk.CellRendererToggle (xalign=0.5)
         recordingDelete.connect ("toggled", self.delete_toggled)
         col5 = Gtk.TreeViewColumn ("Delete", recordingDelete, active=m.DELETE)
         recordingsView.append_column (col5)
@@ -210,7 +212,7 @@ class dutMain:
 
     def open_file_chooser (self, menuitem, window):
         dialog = Gtk.FileChooserDialog ("Open File",
-                                        window,
+                                        None,
                                         Gtk.FileChooserAction.OPEN,
                                         (Gtk.STOCK_CANCEL,
                                         Gtk.ResponseType.CANCEL,
@@ -234,7 +236,7 @@ class dutMain:
 
     def new_folder_chooser (self, menuitem, window):
         dialog = Gtk.FileChooserDialog ("New project",
-                                        window,
+                                        None,
                                         Gtk.FileChooserAction.CREATE_FOLDER,
                                         (Gtk.STOCK_CANCEL,
                                         Gtk.ResponseType.CANCEL,
