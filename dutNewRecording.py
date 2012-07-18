@@ -29,9 +29,8 @@ from gi.repository import GUdev
 Gdk.threads_init ()
 
 class NewRecording:
-    def __init__(self, projectConfig, mainWindow):
+    def __init__(self, mainWindow):
 
-        self.projectConfig = projectConfig
         self.player = None
         self.busSig1 = None
         self.busSig2 = None

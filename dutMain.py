@@ -45,6 +45,7 @@ import dutWebcamRecord
 import dutScreencastRecord
 import dutMux
 import dutNewRecording
+import dutProject
 
 class m:
     TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS = range (6)
@@ -57,13 +58,11 @@ class dutMain:
         self.mux = None
         self.dut = None
         self.projectDir = None
-        self.projectFile = None
         self.projectLabel = None
         self.listStore = None
         self.buttonBox = None
         self.screen = None
-        #GLib.KeyFile causes memory errors in some versions of the bindings
-        self.configFile = None #GLib.KeyFile()
+        self.projectConfig = None
         self.encodeButton = None
         self.recordButton = None
         self.mainWindow = None
@@ -220,16 +219,13 @@ class dutMain:
         response = dialog.run ()
 
         if response == Gtk.ResponseType.OK:
-            self.projectFile = dialog.get_filename ()
-            error = None
-#            GLib.KeyFile.load_from_file (self.configFile, self.projectFile, 0,
-                  #                       error)
+            projectFile = dialog.get_filename ()
+            self.projectDir = GLib.path_get_dirname (projectFile)
+            self.listStore.clear ()
+            self.projectConfig = dutProject.dutProject (projectFile, None)
+            self.projectConfig.populate (self, m)
 
-            if (error):
-                print ("Error loading config file")
-            else:
-                self.enable_buttons ()
-
+            self.enable_buttons ()
 
         dialog.destroy()
 
@@ -245,9 +241,10 @@ class dutMain:
         response = dialog.run ()
 
         if response == Gtk.ResponseType.OK:
+            self.listStore.clear ()
             self.projectDir = dialog.get_filename ()
             projectName = GLib.filename_display_basename (self.projectDir)
-            self.projectFile = "/"+projectName+".ini"
+            self.projectConfig = dutProject.dutProject (self.projectDir+"/"+projectName+".ini", projectName)
 
             self.projectLabel.set_text ("Project: "+projectName)
             self.enable_buttons ()
@@ -255,6 +252,7 @@ class dutMain:
         dialog.destroy()
 
     def on_mainWindow_destroy(self, widget):
+        self.projectConfig.dump (self, m)
         Gtk.main_quit()
 
     def update_progress_bar (self, encodeItem):
@@ -314,8 +312,7 @@ class dutMain:
          # Open dialog for recording settings
          timeStamp = datetime.today().strftime("%d-%m-%y-at-%H%M%S")
 
-         newRecording = dutNewRecording.NewRecording (self.configFile,
-                                                      self.mainWindow)
+         newRecording = dutNewRecording.NewRecording (self.mainWindow)
 
          recordingInfo = newRecording.get_new_recording_info ()
 
