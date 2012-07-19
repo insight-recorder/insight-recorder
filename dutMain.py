@@ -37,8 +37,9 @@ except ImportError:
     print ("Python gst not found try installing python-gst or similar")
     exit ()
 
-from datetime import datetime
 import time
+import shutil
+from datetime import timedelta
 
 import subprocess
 import dutWebcamRecord
@@ -115,6 +116,7 @@ class dutMain:
                                             tooltip_text="Delete selected sessions",
                                             sensitive=False)
 
+        self.recordingDeleteButton.connect("clicked", self.delete_button_clicked_cb)
 
         self.listStore = Gtk.ListStore (str, str, int, bool, bool, int)
 
@@ -183,7 +185,6 @@ class dutMain:
         if self.listStore[path][m.PROGRESS] == 100:
             Gio.AppInfo.launch_default_for_uri ("""file:///"""+self.projectDir+"""/"""+self.listStore[path][m.DATE]+"""/final.webm""", None)
 
-        print ("row activated: "+self.listStore[path][m.TITLE])
 
 
     def buttons_x_offset (self, col, cat):
@@ -307,6 +308,38 @@ class dutMain:
 
         if (self.encodeQueue != None):
             self.run_encode_queue ()
+
+
+    def delete_button_clicked_cb (self, button):
+
+        listItr = self.listStore.get_iter_first ()
+
+        while (listItr != None):
+
+            if (self.listStore.get_value (listItr, m.DELETE) == True):
+
+                recName = self.listStore.get_value (listItr, m.TITLE)
+                recDate = self.listStore.get_value (listItr, m.DATE)
+
+                dialog = Gtk.MessageDialog(self.mainWindow,
+                                           0, Gtk.MessageType.WARNING,
+                                           Gtk.ButtonsType.OK_CANCEL,
+                                           "Move "+recName+" to trash?")
+                dialog.format_secondary_text(
+                    "This operation cannot be undone.")
+                response = dialog.run()
+                if response == Gtk.ResponseType.OK:
+                    shutil.move (self.projectDir+"/"+recDate, GLib.get_home_dir
+                                 ()+"/.local/share/Trash/files/")
+                    #moves the listItr to the next one
+                    self.listStore.remove (listItr)
+                    dialog.destroy()
+                    continue
+                else:
+                    dialog.destroy()
+
+            listItr = self.listStore.iter_next (listItr)
+
 
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
