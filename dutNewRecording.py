@@ -22,6 +22,8 @@
 import gst
 import time
 
+from datetime import datetime
+
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GdkX11
@@ -64,7 +66,7 @@ class NewRecording:
 
         secondaryCaptureLabel = Gtk.Label ("Secondary capture:")
 
-#        primaryCapture.set_active (0)
+        primaryCapture.set_active (0)
 #        secondaryCapture.set_active (0)
 
         devicesBox = Gtk.HBox ()
@@ -111,10 +113,9 @@ class NewRecording:
     def secondary_capture_changed (self, combo):
         print ("secondary changed")
         text = combo.get_active_text ()
-        #TEMP TODO HACK
+        #TEMP TODO HACK change the v4l device in the pipeline
         if text != "Screen":
              v4l = self.player.get_by_name ("cam")
-             print ("set device property2")
              self.player.set_state (gst.STATE_READY)
              v4l.set_state (gst.STATE_NULL)
              v4l.set_property ("device", "/dev/"+text)
@@ -124,9 +125,6 @@ class NewRecording:
 
     def primary_capture_changed (self, combo):
         print ("primary changed")
-
-
-
 
     def window_real (self,wef2):
         print ("drawable realised")
@@ -189,9 +187,11 @@ class NewRecording:
 
     def get_new_recording_info (self):
         if self.response == Gtk.ResponseType.ACCEPT:
+            #TODO DONT USE timedate in folder structure
+            timeStamp = datetime.today().strftime("%d-%m-%H%M%S")
             #TODO also return the result of video source combos
             print (self.recordingTitle)
-            info = ([self.recordingTitle, 1])
+            info = ([self.recordingTitle, timeStamp])
             return info
         else:
             return None

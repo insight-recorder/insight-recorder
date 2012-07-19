@@ -21,11 +21,9 @@
 
 import gst
 
-##  devices = g_udev_client_query_by_subsystem (monitor->priv->client, "video4linux");
-
-
 class Webcam:
     def __init__(self, projectDir):
+      self.duration = 0
       self.element = gst.parse_launch ("""v4l2src device=/dev/video0 ! videorate
                                        force-fps=15/1 ! queue !
                                        videoflip method=horizontal-flip !
@@ -48,6 +46,10 @@ class Webcam:
             print "Error: %s" % err, debug
             self.player.set_state(gst.STATE_NULL)
         if message.type == gst.MESSAGE_EOS:
+            # The end position is approx the duration
+            self.duration, format = self.element.query_position (gst.FORMAT_TIME,
+                                                                 None)
+            print (self.duration)
             # Null/Stop
             self.element.set_state (gst.STATE_NULL)
 
@@ -58,4 +60,10 @@ class Webcam:
       else:
         print ("stop record")
         self.element.send_event (gst.event_new_eos ())
+
+    def get_duration (self):
+        self.duration, format = self.element.query_position (gst.FORMAT_TIME,
+                                                                 None)
+        return self.duration
+
 

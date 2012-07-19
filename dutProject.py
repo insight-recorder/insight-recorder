@@ -37,7 +37,7 @@ class dutProject:
         listStore = dutMain.listStore
         i = 0
 
-#       reference  Gtk.ListStore (str, str, int, bool, bool, int)
+#       reference  Gtk.ListStore (str, str, float, bool, bool, int)
 #                  TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS
 
         if self.isNewFile <= 0:

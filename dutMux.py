@@ -134,17 +134,3 @@ class Muxer:
 # Null/Stop
         self.element.set_state (1)
 
-    def get_progress (self):
-        return 1
-      #  progress = None
-      #  duration = None
-#
-#        print (self.element.get_name ())
- #       self.element.query_position (gst.FORMAT_TIME, progress)
- #       print (progress)
-#
-#
-#        duration, format = self.element.query_duration (gst.FORMAT_TIME, None)
-#        print (progress)
-##        print (duration)
-#        return progress, duration

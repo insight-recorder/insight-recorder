@@ -142,6 +142,12 @@ class dutMain:
         col3 = Gtk.TreeViewColumn ("Duration", recordingDuration,
                                    text=m.DURATION)
         recordingsView.append_column (col3)
+        col3.set_cell_data_func(recordingDuration,
+                                lambda column, cell, model, iter, data:
+                                cell.set_property('text',
+                                                  str(timedelta (seconds=model.get_value (iter, m.DURATION))))
+
+                               )
 
         # Column for export
         recordingExport = Gtk.CellRendererToggle (xalign=0.5)
@@ -343,27 +349,23 @@ class dutMain:
 
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
-         timeStamp = datetime.today().strftime("%d-%m-%y-at-%H%M%S")
 
          newRecording = dutNewRecording.NewRecording (self.mainWindow)
 
          recordingInfo = newRecording.get_new_recording_info ()
 
          if recordingInfo:
-             screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
-             screenH = str (screen.get_height ())
-             screenW = str (screen.get_width ())
 
-             self.listStore.append ([recordingInfo[0],
-                                     timeStamp,
-                                     0,
-                                     False, False, 0])
+             self.listItr = self.listStore.append ([recordingInfo[0], #title
+                                                    recordingInfo[1], #date
+                                                    0, #duration
+                                                    False, False, 0])
 
              self.mainWindow.iconify ()
              self.icon.set_visible (True)
 
              # Create a dir for this recording
-             recordingDir = self.create_new_dir (timeStamp)
+             recordingDir = self.create_new_dir (recordingInfo[1])
              self.webcam = dutWebcamRecord.Webcam (recordingDir)
              self.screencast = dutScreencastRecord.Screencast (recordingDir)
 
@@ -373,7 +375,15 @@ class dutMain:
     def stop_record (self, button):
         self.webcam.record (0)
         self.screencast.record (0)
-        #self.dut.terminate ()
+        duration = self.webcam.get_duration ()
+
+        #duration to seconds
+        duration = round ((duration*0.000000001))
+        print (duration)
+
+        self.listStore.set_value (self.listItr, m.DURATION, duration)
+
+
         self.webcam = None
         self.screencast = None
 
