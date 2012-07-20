@@ -167,6 +167,7 @@ class dutMain:
         self.buttonBox.pack_start (self.recordButton, False, False, 3)
         self.buttonBox.pack_start (self.encodeButton, False, False, 3)
         self.buttonBox.pack_start (self.recordingDeleteButton, False, False, 3)
+        self.buttonBox.hide ()
 
         # Box for rest of the UI which doesn't span the whole window
         innerVbox = Gtk.VBox (spacing=5,
@@ -189,8 +190,9 @@ class dutMain:
 
     def row_activated (self, tree, path, col):
         if self.listStore[path][m.PROGRESS] == 100:
-            Gio.AppInfo.launch_default_for_uri ("""file:///"""+self.projectDir+"""/"""+self.listStore[path][m.DATE]+"""/final.webm""", None)
+            uri = GLib.filename_to_uri (self.projectDir+"/"+self.listStore[path][m.DATE]+"/final.webm", None)
 
+            Gio.AppInfo.launch_default_for_uri (uri, None)
 
 
     def buttons_x_offset (self, col, cat):
@@ -223,6 +225,12 @@ class dutMain:
                                         (Gtk.STOCK_CANCEL,
                                         Gtk.ResponseType.CANCEL,
                                         Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+        fileFilter = Gtk.FileFilter ()
+        fileFilter.set_name ("Dawati User testing project")
+        fileFilter.add_pattern ("*.dut")
+#        fileFilter.add_mime_type("text/plain")
+        dialog.add_filter (fileFilter)
+
         response = dialog.run ()
 
         if response == Gtk.ResponseType.OK:
@@ -245,13 +253,16 @@ class dutMain:
                                         Gtk.ResponseType.CANCEL,
                                         Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
 
+        dialog.set_do_overwrite_confirmation (True)
+
+
         response = dialog.run ()
 
         if response == Gtk.ResponseType.OK:
             self.listStore.clear ()
             self.projectDir = dialog.get_filename ()
             projectName = GLib.filename_display_basename (self.projectDir)
-            self.projectConfig = dutProject.dutProject (self.projectDir+"/"+projectName+".ini", projectName)
+            self.projectConfig = dutProject.dutProject (self.projectDir+"/"+projectName+".dut", projectName)
 
             self.projectLabel.set_text ("Project: "+projectName)
             self.enable_buttons ()
@@ -259,7 +270,9 @@ class dutMain:
         dialog.destroy()
 
     def on_mainWindow_destroy(self, widget):
-        self.projectConfig.dump (self, m)
+        if self.projectConfig != None:
+            self.projectConfig.dump (self, m)
+
         Gtk.main_quit()
 
     def update_progress_bar (self, encodeItem):
@@ -282,8 +295,14 @@ class dutMain:
         GLib.mkdir_with_parents (recordingDir, 0755)
         return recordingDir
 
+    # When the current item reaches 100% encoded it calls this again to see if
+    # there are anymore to encode
     def run_encode_queue (self):
-        encodeItem = self.encodeQueue.pop ()
+        if len (self.encodeQueue) > 0:
+            encodeItem = self.encodeQueue.pop ()
+        else:
+            return
+
         print ("run encode queue")
         #If we've already encoded this item skip it
         if (self.listStore.get_value (encodeItem, m.PROGRESS) == 100):
@@ -330,19 +349,24 @@ class dutMain:
                 dialog = Gtk.MessageDialog(self.mainWindow,
                                            0, Gtk.MessageType.WARNING,
                                            Gtk.ButtonsType.OK_CANCEL,
-                                           "Move "+recName+" to trash?")
+                                           "Move '"+recName+"' to trash?")
                 dialog.format_secondary_text(
                     "This operation cannot be undone.")
                 response = dialog.run()
                 if response == Gtk.ResponseType.OK:
                     shutil.move (self.projectDir+"/"+recDate, GLib.get_home_dir
                                  ()+"/.local/share/Trash/files/")
-                    #moves the listItr to the next one
-                    self.listStore.remove (listItr)
-                    dialog.destroy()
-                    continue
-                else:
-                    dialog.destroy()
+                    # Remove moves the current iter and True if it has moved
+                    # onto the next item false if not
+                    dialog.destroy ()
+
+                    if (self.listStore.remove (listItr) == True):
+                        continue
+                    else:
+                        listItr = None
+                        continue
+
+                dialog.destroy ()
 
             listItr = self.listStore.iter_next (listItr)
 
@@ -381,7 +405,7 @@ class dutMain:
         duration = round ((duration*0.000000001))
         print (duration)
 
-        self.listStore.set_value (self.listItr, m.DURATION, duration)
+        self.listStore.set_value (self.listItr, m.DURATION, int (duration))
 
 
         self.webcam = None

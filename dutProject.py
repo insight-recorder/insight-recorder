@@ -102,6 +102,9 @@ class dutProject:
 
         print ("dump done for "+self.projectFile)
 
+    def remove_recording (self):
+        print ("TODO")
+
 
 
 

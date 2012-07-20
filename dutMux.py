@@ -34,23 +34,34 @@ class Muxer:
       posY = str (screen.get_height () - 240)
       posX = str (screen.get_width () - 320)
 
-      self.element = gst.parse_launch ("""filesrc
-                                       location="""+projectDir+"""/webcam-dut.webm !
-                                       matroskademux name=demux1 ! queue !
-                                       vp8dec ! videorate force-fps=15/1 !
-                                       video/x-raw-yuv,width=320,height=240,framerate=15/1 !
-                                       queue ! videomixer name=mix
-                                       sink_0::xpos=0 sink_0::ypos=0
-                                       sink_1::xpos="""+posX+"""
-                                       sink_1::ypos="""+posY+""" ! vp8enc
-                                       quality=10 speed=2 threads=4 ! webmmux
-                                       name=outmux !
-                                       filesink
-                                       location="""+projectDir+"""/user-testing.webm
-                                       filesrc location="""+projectDir+"""/screencast-dut.webm
-                                       ! matroskademux name=demux2 ! queue !
-                                       vp8dec ! videorate force-fps=15/1 !
-                                       video/x-raw-yuv,framerate=15/1 ! mix.""")
+      screencastLocation = "\""+projectDir+"/screencast-dut.webm\""
+      webcamLocation = "\""+projectDir+"/webcam-dut.webm\""
+      outLocation = "\""+projectDir+"/user-testing.webm\""
+      finalLocation = "\""+projectDir+"/final.webm\""
+
+      gstPipe = """filesrc
+      location="""+webcamLocation+""" name=filein !
+      matroskademux name=demux1 ! queue !
+      vp8dec ! videorate force-fps=15/1 !
+      video/x-raw-yuv,width=320,height=240,framerate=15/1 !
+      queue ! videomixer name=mix
+      sink_0::xpos=0 sink_0::ypos=0
+      sink_1::xpos="""+posX+"""
+      sink_1::ypos="""+posY+""" ! vp8enc
+      quality=10 speed=2 threads=4 ! webmmux name=outmux !
+      filesink location="""+outLocation+"""
+      filesrc  location="""+screencastLocation+"""
+      ! matroskademux name=demux2 ! queue !
+      vp8dec ! videorate force-fps=15/1 !
+      video/x-raw-yuv,framerate=15/1 ! mix."""
+
+
+      self.element = gst.parse_launch (gstPipe)
+
+      #temp
+      wefwef =  self.element.get_by_name ("filein")
+      print (wefwef.get_property ("location"))
+      #tempp end
 
       pipebus = self.element.get_bus ()
 
@@ -58,15 +69,14 @@ class Muxer:
       pipebus.connect ("message", self.pipe1_changed_cb)
 
       #second pass add audio - we could do this in the above pipeline but due to a bug it doesn't quite work..
-      self.element2 = gst.parse_launch ("""filesrc
-                                        location="""+projectDir+"""/webcam-dut.webm ! queue !
-                                        matroskademux ! vorbisparse !
-                                        audio/x-vorbis !  queue ! outmux.audio_0
-                                        filesrc location="""+projectDir+"""/user-testing.webm !
-                                        queue ! matroskademux ! video/x-vp8 !
-                                        queue ! outmux.video_0 webmmux
-                                        name=outmux ! filesink name=sinker
-                                        location="""+projectDir+"""/final.webm""")
+      gstPipe = """filesrc
+      location="""+webcamLocation+""" ! queue ! matroskademux !
+      vorbisparse ! audio/x-vorbis !  queue ! outmux.audio_0
+      filesrc location="""+outLocation+""" ! queue !
+      matroskademux ! video/x-vp8 ! queue ! outmux.video_0 webmmux
+      name=outmux ! filesink location="""+finalLocation+""""""
+
+      self.element2 = gst.parse_launch (gstPipe)
 
       pipebus2 = self.element2.get_bus ()
 
