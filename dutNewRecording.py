@@ -30,6 +30,7 @@ from gi.repository import GdkX11
 from gi.repository import GUdev
 Gdk.threads_init ()
 
+
 class NewRecording:
     def __init__(self, mainWindow):
 
@@ -37,6 +38,7 @@ class NewRecording:
         self.busSig1 = None
         self.busSig2 = None
         self.recordingTitle = None
+        self.secondaryDevice = "/dev/video0" #Default recording device
 
         self.dialog = Gtk.Dialog ("Create recoding",
                                   mainWindow,
@@ -112,14 +114,14 @@ class NewRecording:
 
     def secondary_capture_changed (self, combo):
         print ("secondary changed")
-        text = combo.get_active_text ()
-        #TEMP TODO HACK change the v4l device in the pipeline
-        if text != "Screen":
-             v4l = self.player.get_by_name ("cam")
-             self.player.set_state (gst.STATE_READY)
-             v4l.set_state (gst.STATE_NULL)
-             v4l.set_property ("device", "/dev/"+text)
-             self.player.set_state (gst.STATE_PLAYING)
+        deviceName = combo.get_active_text ()
+        self.secondaryDevice = "/dev/"+deviceName
+        #Update the v4l element's device property
+        v4l = self.player.get_by_name ("cam")
+        self.player.set_state (gst.STATE_READY)
+        v4l.set_state (gst.STATE_NULL)
+        v4l.set_property ("device", self.secondaryDevice)
+        self.player.set_state (gst.STATE_PLAYING)
 
 
 
@@ -191,7 +193,7 @@ class NewRecording:
             timeStamp = datetime.today().strftime("%d-%m-%H%M%S")
             #TODO also return the result of video source combos
             print (self.recordingTitle)
-            info = ([self.recordingTitle, timeStamp])
+            info = ([self.recordingTitle, timeStamp, self.secondaryDevice])
             return info
         else:
             return None

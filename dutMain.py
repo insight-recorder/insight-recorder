@@ -390,7 +390,8 @@ class dutMain:
 
              # Create a dir for this recording
              recordingDir = self.create_new_dir (recordingInfo[1])
-             self.webcam = dutWebcamRecord.Webcam (recordingDir)
+             self.webcam = dutWebcamRecord.Webcam (recordingDir,
+                                                   recordingInfo[2])
              self.screencast = dutScreencastRecord.Screencast (recordingDir)
 
              self.webcam.record (1)

@@ -22,7 +22,7 @@
 import gst
 
 class Webcam:
-    def __init__(self, projectDir):
+    def __init__(self, projectDir, device):
       self.duration = 0
 
       webcamLocation = "\""+projectDir+"/webcam-dut.webm\""
