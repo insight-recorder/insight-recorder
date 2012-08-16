@@ -9,7 +9,7 @@ TODO list
  - audio is currently attached to one of the streams.. decouple this? but then you get a webcam video without any audio makes it difficult to use later - always attach to primary video source
  - Create a NewrecordingInfo class to store and return the properties of a new recording, this would be passed into webcamrecord or screencast record
 
-
+ - Make ximagesrc capture just the primary monitor - might avoid crash when showing preview
  - Microphone levels
  - Input selection/pimary/secondary
  

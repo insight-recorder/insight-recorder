@@ -23,9 +23,7 @@ import gst
 
 
 class Screencast:
-    def __init__(self, projectDir):
-
-      screencastLocation = "\""+projectDir+"/screencast-dut.webm\""
+    def __init__(self, fileOutputLocation):
 
       self.element = gst.parse_launch ("""ximagesrc ! queue ! videorate
                                        force-fps=15/1 !
@@ -35,7 +33,7 @@ class Screencast:
                                        quality=8 threads=2 speed=2 mode=1 !
                                        queue ! webmmux !
                                        filesink
-                                       location="""+screencastLocation+"""""")
+                                       location="""+fileOutputLocation+"""""")
 
       pipebus = self.element.get_bus ()
 
@@ -58,4 +56,10 @@ class Screencast:
       else:
         print ("stop screencast record")
         self.element.send_event (gst.event_new_eos ())
+
+
+    def get_duration (self):
+        self.duration, format = self.element.query_position (gst.FORMAT_TIME,
+                                                             None)
+        return self.duration
 

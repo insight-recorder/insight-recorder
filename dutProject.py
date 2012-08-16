@@ -24,7 +24,6 @@
 
 import ConfigParser
 
-
 class dutProject:
     def __init__ (self, projectFile, projectName):
         self.projectFile = projectFile
@@ -37,29 +36,69 @@ class dutProject:
         listStore = dutMain.listStore
         i = 0
 
-#       reference  Gtk.ListStore (str, str, float, bool, bool, int)
-#                  TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS
-
         if self.isNewFile <= 0:
-            print ("empty project!!")
+            print ("Err: empty project!!")
             return
 
+        self.projectName = self.parser.get ("project", "name")
+
         #eeww
-        dutMain.projectLabel.set_text ("Project: "+self.parser.get ("project", "name"))
+        dutMain.projectLabel.set_text ("Project: "+self.projectName)
+
+        try:
+            dutMain.projectDir = self.parser.get ("project", "dir")
+        except ConfigParser.NoOptionError:
+            print ("Err: project directory key/value not found in config")
+            return
 
         recording = "recording-"+str(i)
 
         while (self.parser.has_section (recording) == True):
 
-            listStore.append ([self.parser.get (recording, "title"),
-                              self.parser.get (recording, "date"),
-                              self.parser.getint (recording, "duration"),
-                              False,
-                              False,
-                              self.parser.getint (recording, "progress")])
+            try:
+                title = self.parser.get (recording, "title")
+            except ConfigParser.NoOptionError:
+                title = "Unknown"
+
+            try:
+                date = self.parser.get (recording, "date")
+            except ConfigParser.NoOptionError:
+                print ("Err: project config does not contain date field/value")
+                return
+
+            try:
+                duration = self.parser.getint (recording, "duration")
+            except ConfigParser.NoOptionError:
+                duration = 0
+
+            try:
+                progress = self.parser.getint (recording, "progress")
+            except ConfigParser.NoOptionError:
+                progress = 0
+
+            try:
+                xpos = self.parser.getint (recording, "xpos")
+            except ConfigParser.NoOptionError:
+                xpos = 0
+
+            try:
+                ypos = self.parser.getint (recording, "ypos")
+            except ConfigParser.NoOptionError:
+                ypos = 0
+
+            listStore.append ([title,
+                               date,
+                               duration,
+                               False,
+                               False,
+                               progress,
+                               xpos, ypos])
+
             i += 1
+
             recording = "recording-"+str(i)
 
+            dutMain.enable_buttons ()
 
     def dump (self, dutMain, cols):
         listStore = dutMain.listStore
@@ -71,6 +110,7 @@ class dutProject:
             self.parser.add_section ("project")
 
         self.parser.set ("project", "name", self.projectName)
+        self.parser.set ("project", "dir", dutMain.projectDir)
 
         while (listItr != None):
             recording = "recording-"+str (i)
@@ -92,6 +132,13 @@ class dutProject:
             self.parser.set (recording, "progress",
                              listStore.get_value (listItr, cols.PROGRESS))
 
+            self.parser.set (recording, "xpos",
+                             listStore.get_value (listItr, cols.POSX))
+
+            self.parser.set (recording, "ypos",
+                             listStore.get_value (listItr, cols.POSY))
+
+
             listItr = listStore.iter_next (listItr)
 
             i += 1
@@ -100,19 +147,8 @@ class dutProject:
         with open (self.projectFile, "wb") as prjob:
             self.parser.write (prjob)
 
-        print ("dump done for "+self.projectFile)
+        print ("Info: dump done for "+self.projectFile)
 
     def remove_recording (self):
         print ("TODO")
-
-
-
-
-
-
-
-
-
-
-
 

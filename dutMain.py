@@ -23,7 +23,7 @@
 try:
     from gi.repository import Gtk
 except ImportError:
-    print ("Gtk3 introspection not found try installing gir-gtk-3.0 or similar")
+    print ("Err: Gtk3 introspection not found try installing gir-gtk-3.0 or similar")
     exit ()
 
 # These are dependencies of Gtk so they should exist if Gtk does
@@ -34,12 +34,15 @@ from gi.repository import Gio
 try:
     import gst
 except ImportError:
-    print ("Python gst not found try installing python-gst or similar")
+    print ("Err: Python gst not found try installing python-gst or similar")
     exit ()
 
 import time
 import shutil
 from datetime import timedelta
+from datetime import datetime
+import sys
+import signal
 
 import subprocess
 import dutWebcamRecord
@@ -49,15 +52,15 @@ import dutNewRecording
 import dutProject
 
 class m:
-    TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS = range (6)
+    TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS, POSX, POSY = range (8)
 
 class dutMain:
     def __init__(self):
 
-        self.webcam = None
-        self.screencast = None
+        self.primary = None
+        self.secondary = None
         self.mux = None
-        self.dut = None
+
         self.projectDir = None
         self.projectLabel = None
         self.listStore = None
@@ -70,6 +73,9 @@ class dutMain:
         self.updateTimer = None
         self.encodeQueue = []
         self.listItr = None
+        self.currentRecording = None
+
+        signal.signal(signal.SIGINT, self.close)
 
         self.icon = Gtk.StatusIcon (visible=False)
         self.icon.set_from_stock (Gtk.STOCK_MEDIA_RECORD)
@@ -120,7 +126,8 @@ class dutMain:
 
         self.recordingDeleteButton.connect("clicked", self.delete_button_clicked_cb)
 
-        self.listStore = Gtk.ListStore (str, str, int, bool, bool, int)
+        self.listStore = Gtk.ListStore (str, str, int, bool, bool, int,
+                                        int, int)
 
 
         recordingsView = Gtk.TreeView (model=self.listStore)
@@ -189,6 +196,20 @@ class dutMain:
         self.mainWindow.add(outterBoxLayout)
         self.mainWindow.show_all()
 
+        self.currentRecording = dutNewRecording.NewRecording (self.mainWindow)
+
+        self.currentRecording.dialog.connect ("response",
+                                               self.new_record_setup_done)
+
+        #argv always contains at least the execuratable as the first item
+        if (len (sys.argv) > 1):
+            #Rudimentary check to see if this is a file we want to open
+            if (sys.argv[1].find (".dut") > 0):
+                self.projectConfig = dutProject.dutProject (sys.argv[1], None)
+                self.projectConfig.populate (self, m)
+            else:
+                print ("Warning: "+sys.argv[1]+" is not a valid Dawati user  testing project file (.dut)")
+
     def notification (self, title, message):
         d = Gio.bus_get_sync(Gio.BusType.SESSION, None)
         notify = Gio.DBusProxy.new_sync(d, 0, None,
@@ -241,7 +262,6 @@ class dutMain:
         fileFilter = Gtk.FileFilter ()
         fileFilter.set_name ("Dawati User testing project")
         fileFilter.add_pattern ("*.dut")
-#        fileFilter.add_mime_type("text/plain")
         dialog.add_filter (fileFilter)
 
         response = dialog.run ()
@@ -252,8 +272,6 @@ class dutMain:
             self.listStore.clear ()
             self.projectConfig = dutProject.dutProject (projectFile, None)
             self.projectConfig.populate (self, m)
-
-            self.enable_buttons ()
 
         dialog.destroy()
 
@@ -267,7 +285,6 @@ class dutMain:
                                         Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
 
         dialog.set_do_overwrite_confirmation (True)
-
 
         response = dialog.run ()
 
@@ -319,29 +336,30 @@ class dutMain:
         else:
             return
 
-        print ("run encode queue")
+        print ("Info: run encode queue")
         #If we've already encoded this item skip it
         if (self.listStore.get_value (encodeItem, m.PROGRESS) == 100):
             return
 
         recordingDir = self.projectDir+"/"+self.listStore.get_value (encodeItem, m.DATE)
-        self.mux = dutMux.Muxer (recordingDir)
-        GLib.timeout_add (500, self.update_progress_bar, encodeItem)
-        print ("run muxer")
-        self.mux.record (1)
+        posX = self.listStore.get_value (encodeItem, m.POSX)
+        posY = self.listStore.get_value (encodeItem, m.POSY)
 
+        self.mux = dutMux.Muxer (recordingDir, posX, posY)
+
+        GLib.timeout_add (500, self.update_progress_bar, encodeItem)
+        print ("Info: run muxer")
+        self.mux.record (1)
 
     def encode_button_clicked_cb (self, button):
 
         listItr = self.listStore.get_iter_first ()
 
         while (listItr != None):
-            print (self.listStore.get_value (listItr, m.EXPORT))
-            print (self.listStore.get_value (listItr, m.TITLE))
 
             if (self.listStore.get_value (listItr, m.EXPORT) == True):
                 #Add item to queue
-                print ("Add " + self.listStore.get_value (listItr,
+                print ("Info: Add " + self.listStore.get_value (listItr,
                                                           m.TITLE) + " to enqueue")
                 self.encodeQueue.append (listItr)
 
@@ -387,52 +405,71 @@ class dutMain:
             listItr = self.listStore.iter_next (listItr)
 
 
+    def new_record_setup_done (self, dialog, response):
+
+        self.currentRecording.close ()
+
+        if (response == Gtk.ResponseType.CANCEL):
+            return
+
+        dateStamp = datetime.today().strftime ("%d-%m-%H%M%S")
+        currentRecording = self.currentRecording
+        # Create a dir for this recording
+        recordingDir = self.create_new_dir (dateStamp)
+
+        self.listItr = self.listStore.append ([currentRecording.recordingTitle,
+                                               dateStamp,
+                                               0, #duration
+                                               False, False, 0,
+                                               currentRecording.posX,
+                                               currentRecording.posY])
+        self.mainWindow.iconify ()
+        self.icon.set_visible (True)
+
+        print ("Info: secondary source "+currentRecording.secondarySource)
+        print ("Info: primary source "+currentRecording.primarySource)
+
+        if (currentRecording.primarySource == "Screen"):
+            self.primary = dutScreencastRecord.Screencast (recordingDir+"/primary-dut.webm")
+        else:
+            self.primary = dutWebcamRecord.Webcam (recordingDir+"/primary-dut.webm", currentRecording.primarySource,
+             currentRecording.primarySourceWidth,
+             currentRecording.primarySourceHeight)
+
+
+        self.secondary = dutWebcamRecord.Webcam  (recordingDir+"/secondary-dut.webm", currentRecording.secondarySource,
+         currentRecording.secondarySourceWidth,
+         currentRecording.secondarySourceHeight)
+
+        self.primary.record (1)
+        self.secondary.record (1)
+
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
-
-         newRecording = dutNewRecording.NewRecording (self.mainWindow)
-
-         recordingInfo = newRecording.get_new_recording_info ()
-
-         if recordingInfo:
-
-             self.listItr = self.listStore.append ([recordingInfo[0], #title
-                                                    recordingInfo[1], #date
-                                                    0, #duration
-                                                    False, False, 0])
-
-             self.mainWindow.iconify ()
-             self.icon.set_visible (True)
-
-             # Create a dir for this recording
-             recordingDir = self.create_new_dir (recordingInfo[1])
-             self.webcam = dutWebcamRecord.Webcam (recordingDir,
-                                                   recordingInfo[2])
-             self.screencast = dutScreencastRecord.Screencast (recordingDir)
-
-             self.webcam.record (1)
-             self.screencast.record (1)
+         self.currentRecording.open ()
 
     def stop_record (self, button):
-        self.webcam.record (0)
-        self.screencast.record (0)
-        duration = self.webcam.get_duration ()
+        self.primary.record (0)
+        self.secondary.record (0)
+
+        duration = self.primary.get_duration ()
 
         #duration to seconds
         duration = round ((duration*0.000000001))
-        print (duration)
 
         self.listStore.set_value (self.listItr, m.DURATION, int (duration))
 
 
-        self.webcam = None
-        self.screencast = None
+        self.primary = None
+        self.secondary = None
 
         #Show the window again
         self.mainWindow.deiconify ()
         self.mainWindow.present ()
         self.icon.set_visible (False)
 
+    def close (self, signal, frame):
+        sys.exit (0)
 
 if __name__ == "__main__":
     dutMain()
