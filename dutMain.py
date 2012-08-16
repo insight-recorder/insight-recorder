@@ -187,6 +187,17 @@ class dutMain:
         self.mainWindow.add(outterBoxLayout)
         self.mainWindow.show_all()
 
+    def notification (self, title, message):
+        d = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        notify = Gio.DBusProxy.new_sync(d, 0, None,
+                                        'org.freedesktop.Notifications',
+                                        '/org/freedesktop/Notifications',
+                                        'org.freedesktop.Notifications', None)
+
+        notify.Notify('(susssasa{sv}i)', 'dawati-user-testing', 1, 'gtk-ok',
+                      title, message,
+                      [], {}, 10000)
+
 
     def row_activated (self, tree, path, col):
         if self.listStore[path][m.PROGRESS] == 100:
@@ -281,6 +292,9 @@ class dutMain:
         self.listStore.set_value (encodeItem, m.PROGRESS, percentDone)
 
         if percentDone == 100:
+            name = self.listStore.get_value (encodeItem, m.TITLE)
+            self.notification ("Dawati user testing",
+                               "Encoding of "+name+" done")
             if (self.encodeQueue != None):
                 #Allow the system to settle down before starting next
                 time.sleep (3)
