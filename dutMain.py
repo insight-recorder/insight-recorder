@@ -87,11 +87,13 @@ class dutMain:
 
         fileNew = Gtk.ToolButton.new_from_stock ("gtk-new")
         fileNew.set_label ("New project")
+        fileNew.set_tooltip_text ("Create a new project")
         fileNew.connect ("clicked", self.new_folder_chooser, self.mainWindow)
 
         fileOpen = Gtk.ToolButton.new_from_stock ("gtk-open")
-        fileNew.set_label ("Open project")
+        fileOpen.set_label ("Open project")
         fileOpen.connect ("clicked", self.open_file_chooser, self.mainWindow)
+        fileOpen.set_tooltip_text ("Open an existing project")
 
         menu.insert (fileNew, 0)
         menu.insert (fileOpen, 1)
