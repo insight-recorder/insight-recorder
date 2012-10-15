@@ -51,6 +51,8 @@ class dutProject:
             print ("Err: project directory key/value not found in config")
             return
 
+        dutMain.enable_buttons ()
+
         recording = "recording-"+str(i)
 
         while (self.parser.has_section (recording) == True):
@@ -98,7 +100,6 @@ class dutProject:
 
             recording = "recording-"+str(i)
 
-            dutMain.enable_buttons ()
 
     def dump (self, dutMain, cols):
         listStore = dutMain.listStore
