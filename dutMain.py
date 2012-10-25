@@ -314,6 +314,7 @@ class dutMain:
             name = self.listStore.get_value (encodeItem, m.TITLE)
             self.notification ("Dawati user testing",
                                "Encoding of "+name+" done")
+            self.listStore.set_value (encodeItem, m.EXPORT, False)
             if (self.encodeQueue != None):
                 #Allow the system to settle down before starting next
                 time.sleep (3)
