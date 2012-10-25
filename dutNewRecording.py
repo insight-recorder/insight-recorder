@@ -258,7 +258,8 @@ class NewRecording:
                                    sink_1::ypos=528 !
                         xvimagesink  sync=false
                         v4l2src device=/dev/video1 name="cam1" !
-                        queue ! videoflip method=horizontal-flip !
+                        queue ! videoflip method=horizontal-flip ! videoflip
+                                        method=vertical-flip !
                         videoscale add-borders=1 !
                         video/x-raw-yuv,width=1024,height=768,pixel-aspect-ratio=1/1 !
                         mix.

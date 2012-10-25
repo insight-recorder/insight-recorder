@@ -434,12 +434,14 @@ class dutMain:
         else:
             self.primary = dutWebcamRecord.Webcam (recordingDir+"/primary-dut.webm", currentRecording.primarySource,
              currentRecording.primarySourceWidth,
-             currentRecording.primarySourceHeight)
+             currentRecording.primarySourceHeight,
+             True)
 
 
         self.secondary = dutWebcamRecord.Webcam  (recordingDir+"/secondary-dut.webm", currentRecording.secondarySource,
          currentRecording.secondarySourceWidth,
-         currentRecording.secondarySourceHeight)
+         currentRecording.secondarySourceHeight,
+        False)
 
         self.primary.record (1)
         self.secondary.record (1)
