@@ -13,6 +13,7 @@ setup(name='Dawati user testing',
       url='http://github.com/dawati/dawati-user-testing',
       packages=['dut'],
       package_dir={'dut': 'src/dut'},
+      data_files = [('share/applications', ['data/dawati-user-testing.desktop'])],
 #      package_data={'none yet': ['*.xml']},
       scripts=['dawati-user-testing'],
 )
