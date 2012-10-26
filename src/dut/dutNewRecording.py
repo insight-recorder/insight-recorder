@@ -41,7 +41,9 @@ class NewRecording:
         self.busSig2 = None
         self.recordingTitle = None
 
-        self.secondarySource = "/dev/video0" #Default recording device
+        # This will be the first video capture device
+        self.secondarySource = None
+
         self.primarySource = "Screen"
 
         self.primarySourceHeight = 0
@@ -74,8 +76,13 @@ class NewRecording:
 
 
         for device in devices:
-            self.secondaryCombo.append_text (device.get_name ())
-            self.primaryCombo.append_text (device.get_name ())
+            deviceName = device.get_name ()
+
+            if self.secondarySource == None:
+                self.secondarySource = "/dev/"+deviceName
+
+            self.secondaryCombo.append_text (deviceName)
+            self.primaryCombo.append_text (deviceName)
 
         secondaryComboLabel = Gtk.Label ("Secondary capture:")
 
@@ -212,7 +219,7 @@ class NewRecording:
         posXStr = str (self.posX)
 
 
-        self.player = gst.parse_launch ("""v4l2src device=/dev/video0 name="cam2" !
+        self.player = gst.parse_launch ("""v4l2src device="""+self.secondarySource+""" name="cam2" !
                                        videoscale ! queue ! videoflip
                                        method=horizontal-flip !
                                        video/x-raw-yuv,height=240,framerate=15/1
@@ -222,7 +229,6 @@ class NewRecording:
                                        xvimagesink  sync=false       ximagesrc
                                        use-damage=false show-pointer=true  !
                                        videoscale ! video/x-raw-rgb,framerate=15/1 ! ffmpegcolorspace ! video/x-raw-yuv ! mix.""")
-
 
         self.player.set_state(gst.STATE_PLAYING)
 
@@ -250,14 +256,14 @@ class NewRecording:
         self.posX = 704
 
         self.player = gst.parse_launch ("""
-                        v4l2src device=/dev/video0 name="cam2" ! queue !
+                        v4l2src device="""+self.secondarySource+""" name="cam2" ! queue !
                         videoflip method=horizontal-flip !
                         videoscale  add-borders=1 !
                         video/x-raw-yuv,width=320,height=240,framerate=15/1,pixel-aspect-ratio=1/1 !                           videomixer name=mix sink_0::xpos=0
                                    sink_0::ypos=0 sink_1::xpos=704
                                    sink_1::ypos=528 !
                         xvimagesink  sync=false
-                        v4l2src device=/dev/video1 name="cam1" !
+                        v4l2src device="""+self.primarySource+""" name="cam1" !
                         queue ! videoflip method=horizontal-flip ! videoflip
                                         method=vertical-flip !
                         videoscale add-borders=1 !
