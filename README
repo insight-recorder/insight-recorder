@@ -2,8 +2,14 @@
 This is a prototype application for recording screencasts and webcams simultaneously for running user testing sessions. Use at your own risk.
 
 
-== Running ==
- python ./dutMain.py
+== system install ==
+
+sudo python setup.py install
+
+
+== run ==
+
+dawati-user-testing
 
 == Required dependencies ==
 
