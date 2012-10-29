@@ -19,3 +19,6 @@ Debain/Ubuntu package names:
 - python-gi
 - gir1.2-gtk-3.0
 - gir1.2-gudev-1.0
+- gstreamer0.10-plugins-bad (vp8enc)
+- gstreamer0.10-plugins-good
+- gstreamer0.10-alsa

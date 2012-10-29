@@ -75,6 +75,8 @@ class dutMain:
         self.listItr = None
         self.currentRecording = None
 
+        self.check_gst_elements_available ()
+
         signal.signal(signal.SIGINT, self.close)
 
         self.icon = Gtk.StatusIcon (visible=False)
@@ -209,6 +211,36 @@ class dutMain:
                 self.projectConfig.populate (self, m)
             else:
                 print ("Warning: "+sys.argv[1]+" is not a valid Dawati user  testing project file (.dut)")
+
+    def check_gst_elements_available (self):
+        message = ""
+
+        # gst-plugins-bad
+        if (gst.element_factory_find ("vp8enc") == None):
+            message += "Element vp8enc missing: this is normally found in package gstreamer-plugins-bad\n"
+        # gst-plugins-good
+        if (gst.element_factory_find ("videomixer") == None):
+            message += "Element videomixer missing: this is normally found in package gstreamer-plugins-good\n"
+
+        # gst-plugins-base
+        if (gst.element_factory_find ("videoscale") == None):
+            message += "Element videoscale missing: this is normally found in package gstreamer-plugins-base\n"
+
+        # gst-alsa
+        if (gst.element_factory_find ("alsasrc") == None):
+            message += "Element alsasrc missing: this is normally found in gstreamer-alsa\n"
+
+        if (message == ""):
+            return
+
+        dialog = Gtk.MessageDialog (self.mainWindow, 0, Gtk.MessageType.ERROR,
+                                   Gtk.ButtonsType.CANCEL,
+                                    "Required gstreamer element missing")
+        dialog.format_secondary_text (message)
+
+        dialog.run ()
+
+        dialog.destroy ()
 
     def notification (self, title, message):
         d = Gio.bus_get_sync(Gio.BusType.SESSION, None)
