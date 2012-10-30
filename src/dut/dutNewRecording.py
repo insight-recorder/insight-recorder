@@ -119,10 +119,6 @@ class NewRecording:
         contentArea.add (self.playerWindow)
         contentArea.add (audioBox)
 
-        contentArea.show_all ()
-
-        self.samePrimaryAlert.hide ()
-        self.sameSecondaryAlert.hide ()
 
 
     def secondary_capture_changed (self, combo):
@@ -221,16 +217,15 @@ class NewRecording:
 
         self.player = gst.parse_launch ("""v4l2src device="""+self.secondarySource+""" name="cam2" !
                                        videoscale ! queue ! videoflip
-                                       method=horizontal-flip !
-                                       video/x-raw-yuv,height=240,framerate=15/1
+                                       method=horizontal-flip ! ffmpegcolorspace !
+                                       video/x-raw-rgb,height=240,framerate=15/1
                                        ! videomixer name=mix sink_0::xpos=0
                                        sink_0::ypos=0 sink_1::xpos="""+posXStr+"""
-                                       sink_1::ypos="""+posYStr+""" !
-                                       xvimagesink  sync=false       ximagesrc
+                                       sink_1::ypos="""+posYStr+""" ! videoscale !
+                                       ximagesink  sync=false       ximagesrc
                                        use-damage=false show-pointer=true  !
-                                       videoscale ! video/x-raw-rgb,framerate=15/1 ! ffmpegcolorspace ! video/x-raw-yuv ! mix.""")
+                                       videoscale ! video/x-raw-rgb,framerate=15/1 ! mix.""")
 
-        self.player.set_state(gst.STATE_PLAYING)
 
         bus = self.player.get_bus()
         bus.add_signal_watch()
@@ -238,6 +233,10 @@ class NewRecording:
         self.busSig1 = bus.connect("message", self.on_message)
         self.busSig2 = bus.connect("sync-message::element",
                                    self.on_sync_message)
+
+        self.xid = self.playerWindow.get_window ().get_xid()
+
+        self.player.set_state(gst.STATE_PLAYING)
 
     def video_preview_webcam_webcam (self):
 
@@ -257,21 +256,21 @@ class NewRecording:
 
         self.player = gst.parse_launch ("""
                         v4l2src device="""+self.secondarySource+""" name="cam2" ! queue !
-                        videoflip method=horizontal-flip !
-                        videoscale  add-borders=1 !
-                        video/x-raw-yuv,width=320,height=240,framerate=15/1,pixel-aspect-ratio=1/1 !                           videomixer name=mix sink_0::xpos=0
+                        videoflip method=horizontal-flip ! ffmpegcolorspace !
+                        videoscale  add-borders=1 ! 
+                        video/x-raw-rgb,width=320,height=240,framerate=15/1,pixel-aspect-ratio=1/1 !                           videomixer name=mix sink_0::xpos=0
                                    sink_0::ypos=0 sink_1::xpos=704
                                    sink_1::ypos=528 !
-                        xvimagesink  sync=false
+                        videoscale ! ximagesink sync=false
                         v4l2src device="""+self.primarySource+""" name="cam1" !
                         queue ! videoflip method=horizontal-flip ! videoflip
-                                        method=vertical-flip !
-                        videoscale add-borders=1 !
-                        video/x-raw-yuv,width=1024,height=768,pixel-aspect-ratio=1/1 !
+                                        method=vertical-flip ! ffmpegcolorspace
+                                        !
+                        videoscale add-borders=1 ! 
+                        video/x-raw-rgb,width=1024,height=768,pixel-aspect-ratio=1/1 !
                         mix.
                                         """)
 
-        self.player.set_state(gst.STATE_PLAYING)
 
         bus = self.player.get_bus()
         bus.add_signal_watch()
@@ -279,6 +278,10 @@ class NewRecording:
         self.busSig1 = bus.connect("message", self.on_message)
         self.busSig2 = bus.connect("sync-message::element",
                                    self.on_sync_message)
+
+        self.xid = self.playerWindow.get_window ().get_xid()
+
+        self.player.set_state(gst.STATE_PLAYING)
 
 
     def on_message(self, bus, message):
@@ -291,21 +294,10 @@ class NewRecording:
             print "Err: %s" % err, debug
 
     def on_sync_message(self, bus, message):
-        if message.structure is None:
-            return
         message_name = message.structure.get_name()
         if message_name == "prepare-xwindow-id":
-            imagesink = message.src
-
-            Gdk.threads_enter()
-
-            # Sync with the X server before giving the X-id to the sink
-            Gdk.get_default_root_window ().get_display ().sync ()
-            xid = self.playerWindow.get_window ().get_xid()
-            imagesink.set_property("force-aspect-ratio", True)
-            imagesink.set_xwindow_id (xid)
-
-            Gdk.threads_leave ()
+            message.src.set_property("force-aspect-ratio", True)
+            message.src.set_xwindow_id (self.xid)
 
     def close (self):
         self.recordingTitle = self.entry.get_text ()
@@ -327,7 +319,9 @@ class NewRecording:
         self.player = None
 
     def open (self):
-        self.dialog.show ()
+        self.dialog.show_all ()
+        self.samePrimaryAlert.hide ()
+        self.sameSecondaryAlert.hide ()
         self.secondaryCombo.set_active (-1)
         self.primaryCombo.set_active (-1)
         self.video_preview_screencast_webcam ()
