@@ -50,7 +50,6 @@ import dutScreencastRecord
 import dutMux
 import dutNewRecording
 import dutProject
-import dutIndicator
 
 class m:
     TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS, POSX, POSY = range (8)
@@ -75,7 +74,6 @@ class dutMain:
         self.encodeQueue = []
         self.listItr = None
         self.currentRecording = None
-        self.isRecording = False
 
         self.check_gst_elements_available ()
 
@@ -89,11 +87,6 @@ class dutMain:
                                      resizable=False,
                                      icon_name=Gtk.STOCK_MEDIA_RECORD)
         self.mainWindow.connect("destroy", self.on_mainWindow_destroy)
-
-        # special case ubutnu :/
-        self.appIndicator = dutIndicator.dutIndicator (self)
-        if (self.appIndicator.hasIndicator == True):
-          self.appIndicator.stopRecord.connect ("activate", self.stop_record)
 
         outterBoxLayout = Gtk.VBox (spacing=5, homogeneous=False)
 
@@ -485,14 +478,12 @@ class dutMain:
 
         self.primary.record (1)
         self.secondary.record (1)
-        self.isRecording = True
 
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
          self.currentRecording.open ()
 
-    def stop_record (self, unused):
-        self.isRecording = False
+    def stop_record (self, button):
         self.primary.record (0)
         self.secondary.record (0)
 
