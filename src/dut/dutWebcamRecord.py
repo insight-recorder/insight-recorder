@@ -31,23 +31,20 @@ class Webcam:
       if Vflip == True:
           flip = " videoflip method=vertical-flip !"
 
-      pipeline = """v4l2src device="""+device+""" ! videorate
-      force-fps=15/1 ! queue !
-      videoflip method=horizontal-flip !
-      videoscale add-borders=1 ! """+flip+"""
-      video/x-raw-yuv,width="""+widthStr+""",
-      height="""+heightStr+""",pixel-aspect-ratio=1/1 !
-      vp8enc speed=7 !
-      queue ! mux. alsasrc !
-      audio/x-raw-int,rate=48000,channels=1,depth=16 !
-      queue ! audioconvert ! queue !
-      vorbisenc ! queue ! mux.
-      webmmux name=mux ! filesink
-      location="""+fileOutputLocation+""""""
+      self.element = gst.parse_launch ("""v4l2src device="""+device+""" ! videorate
+                                       force-fps=15/1 ! queue !
+                                       videoflip method=horizontal-flip !
+                                       videoscale add-borders=1 ! """+flip+"""
+                                       video/x-raw-yuv,width="""+widthStr+""",
+                                       height="""+heightStr+""",pixel-aspect-ratio=1/1 !
+                                       vp8enc speed=7 !
+                                       queue ! mux. alsasrc !
+                                       audio/x-raw-int,rate=48000,channels=1,depth=16 !
+                                       queue ! audioconvert ! queue !
+                                       vorbisenc ! queue ! mux.
+                                       webmmux name=mux ! filesink
+                                       location="""+fileOutputLocation+"""""")
 
-      print (pipeline)
-
-      self.element = gst.parse_launch (pipeline)
       pipebus = self.element.get_bus ()
 
       pipebus.add_signal_watch ()

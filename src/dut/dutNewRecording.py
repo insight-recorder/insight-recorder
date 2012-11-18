@@ -51,12 +51,9 @@ class NewRecording:
         self.secondarySourceHeight = 0
         self.secondarySourceWidth = 0
 
-        print (mainWindow)
-
         self.dialog = Gtk.Dialog ("Create recoding",
                                   mainWindow,
-                                  Gtk.DialogFlags.MODAL)
-        self.dialog.connect ("window state event", )
+                                  2)
 
         cancel = self.dialog.add_button ("Cancel", Gtk.ResponseType.CANCEL)
         accept = self.dialog.add_button ("Start recording", Gtk.ResponseType.ACCEPT)
