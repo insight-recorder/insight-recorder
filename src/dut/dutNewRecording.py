@@ -33,8 +33,12 @@ Gdk.threads_init ()
 class mode:
     TWOCAM, SCREENCAST = range (2)
 
-class NewRecording:
+class NewRecording (Gtk.Dialog):
     def __init__(self, mainWindow):
+
+        Gtk.Dialog.__init__ (self, "Create recoding",
+                             mainWindow,
+                             Gtk.DialogFlags.MODAL)
 
         self.player = None
         self.busSig1 = None
@@ -51,12 +55,8 @@ class NewRecording:
         self.secondarySourceHeight = 0
         self.secondarySourceWidth = 0
 
-        self.dialog = Gtk.Dialog ("Create recoding",
-                                  mainWindow,
-                                  2)
-
-        cancel = self.dialog.add_button ("Cancel", Gtk.ResponseType.CANCEL)
-        accept = self.dialog.add_button ("Start recording", Gtk.ResponseType.ACCEPT)
+        cancel = self.add_button ("Cancel", Gtk.ResponseType.CANCEL)
+        accept = self.add_button ("Start recording", Gtk.ResponseType.ACCEPT)
 
         # UI Elements for create recording dialog
         label = Gtk.Label (label="Recording name:", halign=Gtk.Align.START)
@@ -111,7 +111,7 @@ class NewRecording:
 
         audioBox = Gtk.HBox ()
 
-        contentArea = self.dialog.get_content_area ()
+        contentArea = self.get_content_area ()
         contentArea.set_spacing (8)
         contentArea.add (label)
         contentArea.add (self.entry)
@@ -302,7 +302,7 @@ class NewRecording:
     def close (self):
         self.recordingTitle = self.entry.get_text ()
 
-        self.dialog.hide ()
+        self.hide ()
 
         #Make sure that the cameras aren't in a locked state state
         cam2 = self.player.get_by_name ("cam2")
@@ -319,7 +319,7 @@ class NewRecording:
         self.player = None
 
     def open (self):
-        self.dialog.show_all ()
+        self.show_all ()
         self.samePrimaryAlert.hide ()
         self.sameSecondaryAlert.hide ()
         self.secondaryCombo.set_active (-1)

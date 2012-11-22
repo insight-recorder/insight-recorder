@@ -200,8 +200,8 @@ class dutMain:
 
         self.currentRecording = dutNewRecording.NewRecording (self.mainWindow)
 
-        self.currentRecording.dialog.connect ("response",
-                                               self.new_record_setup_done)
+        self.currentRecording.connect ("response",
+                                       self.new_record_setup_done)
 
         #argv always contains at least the execuratable as the first item
         if (len (sys.argv) > 1):
