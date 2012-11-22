@@ -442,7 +442,7 @@ class dutMain:
 
         self.currentRecording.close ()
 
-        if (response == Gtk.ResponseType.CANCEL):
+        if (response != Gtk.ResponseType.ACCEPT):
             return
 
         dateStamp = datetime.today().strftime ("%d-%m-%H%M%S")
