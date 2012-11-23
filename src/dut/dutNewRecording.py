@@ -71,15 +71,18 @@ class NewRecording (Gtk.Dialog):
         self.secondaryCombo.set_title ("Secondary Combo")
 
         #Add available video4linux devices
-        devices = GUdev.Client ().query_by_subsystem ("video4linux")
+        self.uDevClient = GUdev.Client (subsystems=["video4linux"])
+        self.uDevClient.connect ("uevent", self.devices_changed)
 
+        devices = self.uDevClient.query_by_subsystem ("video4linux")
+
+        self.defaultSecondarySource = None
 
         for device in devices:
-            self.numDevices += 1
             deviceName = device.get_name ()
 
-            if self.secondarySource == None:
-                self.secondarySource = "/dev/"+deviceName
+            if self.defaultSecondarySource == None:
+                self.defaultSecondarySource = "/dev/"+deviceName
 
             self.secondaryCombo.append_text (deviceName)
             self.primaryCombo.append_text (deviceName)
@@ -118,6 +121,38 @@ class NewRecording (Gtk.Dialog):
         contentArea.add (devicesBox)
         contentArea.add (self.playerWindow)
         contentArea.add (audioBox)
+
+    def devices_changed (self, client, action, device):
+        deviceName = device.get_name ()
+
+        if (action == "add"):
+            self.primaryCombo.append_text (deviceName)
+            self.secondaryCombo.append_text (deviceName)
+        elif (action == "remove"):
+            devPath = "/dev/"+deviceName
+            if (self.secondarySource == devPath or
+                self.primarySource == devPath):
+                print ("warning: OUCH! You removed a video device I was using!")
+                self.player = None
+
+            primaryModel = self.primaryCombo.get_model ()
+            secondaryModel = self.secondaryCombo.get_model ()
+
+            listItr = primaryModel.get_iter_first ()
+
+            while (listItr != None):
+                if (primaryModel.get_value (listItr, 0) == deviceName):
+                    primaryModel.remove (listItr)
+                    break
+                listItr = primaryModel.iter_next (listItr)
+
+            listItr = secondaryModel.get_iter_first ()
+
+            while (listItr != None):
+                if (secondaryModel.get_value (listItr, 0) == deviceName):
+                    secondaryModel.remove (listItr)
+                    break
+                listItr = secondaryModel.iter_next (listItr)
 
 
 
