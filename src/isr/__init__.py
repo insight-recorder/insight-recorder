@@ -211,7 +211,7 @@ class isrMain:
         #argv always contains at least the execuratable as the first item
         if (len (sys.argv) > 1):
             #Rudimentary check to see if this is a file we want to open
-            if (sys.argv[1].find (".isr") > 0):
+            if (sys.argv[1].find (".isr") > 0 or sys.argv[1].find (".dut") > 0):
                 self.projectConfig = isrProject.isrProject (sys.argv[1], None)
                 self.projectConfig.populate (self, m)
             else:
