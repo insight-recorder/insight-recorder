@@ -50,6 +50,7 @@ import dutScreencastRecord
 import dutMux
 import dutNewRecording
 import dutProject
+import dutIndicator
 
 class m:
     TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS, POSX, POSY = range (8)
@@ -74,8 +75,11 @@ class dutMain:
         self.encodeQueue = []
         self.listItr = None
         self.currentRecording = None
+        self.isRecording = False
 
         self.check_gst_elements_available ()
+
+        self.indicator = dutIndicator.Indicator (self)
 
         signal.signal(signal.SIGINT, self.close)
 
@@ -509,10 +513,12 @@ class dutMain:
         if (self.secondary is not None):
             print ("Info: secondary source "+secondarySource)
             self.secondary.record (1)
+            self.isRecording = True
 
         if (self.primary is not None):
             print ("Info: primary source "+primarySource)
             self.primary.record (1)
+            self.isRecording = True
 
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
