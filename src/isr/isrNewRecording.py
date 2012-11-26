@@ -271,6 +271,9 @@ class NewRecording (Gtk.Dialog):
 
         self.mode = mode.SCREENCAST
 
+        self.posY = 0
+        self.posX = 0
+
         screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
         self.primarySourceHeight = screen.get_height ()
         self.primarySourceWidth = screen.get_width ()
@@ -301,7 +304,8 @@ class NewRecording (Gtk.Dialog):
 
         self.mode = mode.WEBCAM
 
-        print ("pipe with"+self.primarySource)
+        self.posY = 0
+        self.posX = 0
 
         self.player = gst.parse_launch ("""v4l2src
                                         device="""+self.primarySource+"""
