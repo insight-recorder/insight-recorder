@@ -4,7 +4,17 @@ This is a prototype application for recording screencasts and webcams simultaneo
 
 == system install ==
 
-sudo python setup.py install
+$ sudo python setup.py install --prefix=/usr
+
+- see also python setup.py install --help
+
+== single user install ==
+
+Either just run from current directory or use:
+
+$ python setup.py install --home
+
+- see also python setup.py install --help
 
 
 == run ==
@@ -22,3 +32,5 @@ Debain/Ubuntu package names:
 - gstreamer0.10-plugins-bad (vp8enc)
 - gstreamer0.10-plugins-good
 - gstreamer0.10-alsa
+
+# special for ubuntu gir1.2-appindicator3-0.1
