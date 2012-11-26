@@ -24,11 +24,11 @@ if os.environ.get('DESKTOP_SESSION') not in ('ubuntu', 'ubuntu-2d'):
    isUnity = False
 else:
     try:
-	from gi.repository import AppIndicator3
-	isUnity = True
+        from gi.repository import AppIndicator3
+        isUnity = True
     except ImportError:
-	print ("Error: we detected ubuntu as the desktop but found no appindicator library")
-	isUnity = False
+        print ("Error: we detected ubuntu as the desktop but found no appindicator library")
+        isUnity = False
 
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -36,7 +36,7 @@ from gi.repository import Gdk
 class Indicator:
     def __init__ (self, isrMain):
       if (isUnity is not True):
-	return;
+          return;
 
       self.isrMain = isrMain
 
@@ -46,6 +46,7 @@ class Indicator:
 
       menu = Gtk.Menu ()
       self.stopRecord = Gtk.MenuItem ("Stop recording")
+      self.stopRecord.connect ("activate", isrMain.stop_record)
 
       menu.append (self.stopRecord)
       self.stopRecord.show ()
