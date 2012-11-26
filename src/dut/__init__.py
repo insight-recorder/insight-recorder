@@ -459,33 +459,74 @@ class dutMain:
         self.mainWindow.iconify ()
         self.icon.set_visible (True)
 
-        print ("Info: secondary source "+currentRecording.secondarySource)
-        print ("Info: primary source "+currentRecording.primarySource)
+        #if we only has one video source call it final
+        finalFile = recordingDir+"/final.webm"
+        primaryFile = recordingDir+"/primary-dut.webm"
+        secondaryFile = recordingDir+"/secondary-dut.webm"
 
-        if (currentRecording.primarySource == "Screen"):
-            self.primary = dutScreencastRecord.Screencast (recordingDir+"/primary-dut.webm")
-        else:
-            self.primary = dutWebcamRecord.Webcam (recordingDir+"/primary-dut.webm", currentRecording.primarySource,
-             currentRecording.primarySourceWidth,
-             currentRecording.primarySourceHeight,
-             True)
+        #shorten the var names :/
+        primarySource = currentRecording.primarySource
+        secondarySource = currentRecording.secondarySource
+        mode = dutNewRecording.mode
+        secondaryWidth = currentRecording.secondarySourceWidth
+        secondaryHeight = currentRecording.secondarySourceHeight
+        primaryWidth = currentRecording.primarySourceWidth
+        primaryHeight = currentRecording.primarySourceHeight
 
 
-        self.secondary = dutWebcamRecord.Webcam  (recordingDir+"/secondary-dut.webm", currentRecording.secondarySource,
-         currentRecording.secondarySourceWidth,
-         currentRecording.secondarySourceHeight,
-        False)
+        if (currentRecording.mode == mode.WEBCAM):
+            self.primary = dutWebcamRecord.Webcam (finalFile,
+                                                   primarySource,
+                                                   secondaryWidth,
+                                                   secondaryHeight,
+                                                   False)
 
-        self.primary.record (1)
-        self.secondary.record (1)
+        elif (currentRecording.mode == mode.SCREENCAST):
+            self.primary = dutScreencastRecord.Screencast (finalFile)
+
+        elif (currentRecording.mode == mode.SCREENCAST_PIP):
+            self.primary = dutScreencastRecord.Screencast (primaryFile)
+
+            self.secondary = dutWebcamRecord.Webcam  (secondaryFile,
+                                                      secondarySource,
+                                                      secondaryWidth,
+                                                      secondaryHeight,
+                                                      False)
+
+        elif (currentRecording.mode == mode.TWOCAM):
+            self.primary = dutWebcamRecord.Webcam (primaryFile,
+                                                   primarySource,
+                                                   primaryWidth,
+                                                   primaryHeight,
+                                                   True)
+
+            self.secondary = dutWebcamRecord.Webcam  (secondaryFile,
+                                                      secondarySource,
+                                                      secondaryWidth,
+                                                      secondaryHeight,
+                                                      False)
+
+        if (self.secondary is not None):
+            print ("Info: secondary source "+secondarySource)
+            self.secondary.record (1)
+
+        if (self.primary is not None):
+            print ("Info: primary source "+primarySource)
+            self.primary.record (1)
 
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
          self.currentRecording.open ()
 
     def stop_record (self, button):
+        self.isRecording = False
+
         self.primary.record (0)
-        self.secondary.record (0)
+        if (self.secondary is not None):
+            self.secondary.record (0)
+        else:
+            #We had no secondary so there is no need to do an encode
+            self.listStore.set_value (self.listItr, m.PROGRESS, int (100))
 
         duration = self.primary.get_duration ()
 

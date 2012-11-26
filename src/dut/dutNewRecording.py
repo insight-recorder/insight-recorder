@@ -31,7 +31,7 @@ from gi.repository import GUdev
 Gdk.threads_init ()
 
 class mode:
-    TWOCAM, SCREENCAST = range (2)
+    TWOCAM, SCREENCAST_PIP, SCREENCAST, WEBCAM = range (4)
 
 class NewRecording (Gtk.Dialog):
     def __init__(self, mainWindow):
@@ -44,10 +44,9 @@ class NewRecording (Gtk.Dialog):
         self.busSig1 = None
         self.busSig2 = None
         self.recordingTitle = None
+        self.mode = None
 
-        # This will be the first video capture device
         self.secondarySource = None
-
         self.primarySource = "Screen"
 
         self.primarySourceHeight = 0
@@ -76,6 +75,7 @@ class NewRecording (Gtk.Dialog):
 
 
         for device in devices:
+            self.numDevices += 1
             deviceName = device.get_name ()
 
             if self.secondarySource == None:
@@ -84,6 +84,7 @@ class NewRecording (Gtk.Dialog):
             self.secondaryCombo.append_text (deviceName)
             self.primaryCombo.append_text (deviceName)
 
+        self.secondaryCombo.append_text ("None");
         secondaryComboLabel = Gtk.Label ("Secondary capture:")
 
         devicesBox = Gtk.HBox ()
@@ -103,7 +104,6 @@ class NewRecording (Gtk.Dialog):
         self.playerWindow = Gtk.DrawingArea ()
         self.playerWindow.set_double_buffered (False)
         self.playerWindow.set_size_request (600, 300)
-        self.playerWindow.connect ("realize", self.window_real)
 
         # TODO
         audioToggle = Gtk.Switch ()
@@ -129,9 +129,37 @@ class NewRecording (Gtk.Dialog):
 
         self.sameSecondaryAlert.hide ()
 
+        if (deviceName == "None"):
+            self.secondarySource = None
+            if (self.primarySource == "Screen"):
+                self.video_preview_screencast_only ()
+            else:
+                self.video_preview_webcam_only ()
+            return
+
+
+        print ("set secondary source")
         self.secondarySource = "/dev/"+deviceName
 
+        #There are no modes which have a secondary capture and no primary
+        if (self.mode == mode.WEBCAM or self.mode == mode.SCREENCAST):
+            #determine which mode we should switch to based on current primary
+            if (self.primarySource == "Screen"):
+                self.video_preview_screencast_webcam ()
+                return
+            else:
+                self.video_preview_webcam_webcam ()
+                return
+
+
         self.player.set_state (gst.STATE_READY)
+
+        # If we were in screencast mode then we need to get out of it
+        # as we now have a secondary source to use
+        if (self.mode == mode.SCREENCAST):
+            self.video_preview_screencast_webcam ()
+            return
+
 
         if (self.mode == mode.TWOCAM):
             cam1 = self.player.get_by_name ("cam1")
@@ -155,50 +183,120 @@ class NewRecording (Gtk.Dialog):
     def primary_capture_changed (self, combo):
         deviceName = combo.get_active_text ()
 
-        if (deviceName == None):
-            return
-
         self.samePrimaryAlert.hide ()
+
 
         if (deviceName == "Screen"):
             self.primarySource = deviceName
-            self.video_preview_screencast_webcam ()
+            if (self.secondarySource == None):
+                self.video_preview_screencast_only ()
+            else:
+                self.video_preview_screencast_webcam ()
             return
-        #If we're not running in two cam mode already set it up
-        elif (self.mode != mode.TWOCAM):
-            self.video_preview_webcam_webcam ()
 
         self.primarySource = "/dev/"+deviceName
         self.player.set_state (gst.STATE_READY)
 
-        cam2 = self.player.get_by_name ("cam2")
+        #our secondary source is none and we're not recording a screencast
+        if (self.secondarySource == None and self.mode is not mode.WEBCAM):
+            self.video_preview_webcam_only ()
+            return
+        #we have a primary source which is not the screen and a secondary source
+        #that is not none.
+        if (self.secondarySource is not None and self.mode is not mode.TWOCAM):
+            self.video_preview_webcam_webcam ()
+            return
+
         cam1 = self.player.get_by_name ("cam1")
-
-        cam2.set_locked_state (False)
         cam1.set_locked_state (False)
-
-        cam2.set_state (gst.STATE_NULL)
         cam1.set_state (gst.STATE_NULL)
 
-        # Avoid both being set by locking the other source in a null state
-        if (self.secondarySource == self.primarySource):
-            cam2.set_locked_state (True)
-            self.secondaryCombo.set_active (-1)
-            self.sameSecondaryAlert.show ()
+        if (self.mode == mode.TWOCAM):
+            cam2 = self.player.get_by_name ("cam2")
+            cam2.set_locked_state (False)
+            cam2.set_state (gst.STATE_NULL)
+            # Avoid both being set by locking the other source in a null state
+            if (self.secondarySource == self.primarySource):
+                cam2.set_locked_state (True)
+                self.secondaryCombo.set_active (-1)
+                self.sameSecondaryAlert.show ()
 
         cam1.set_property ("device", self.primarySource)
 
         self.player.set_state (gst.STATE_PLAYING)
 
-    def window_real (self,wef2):
-        self.video_preview_screencast_webcam ()
+    def video_preview_screencast_only (self):
 
-    def video_preview_screencast_webcam (self):
+        if (self.mode == mode.SCREENCAST and self.mode is not None
+            and self.player is not None):
+            return
 
         if (self.player):
             self.player.set_state(gst.STATE_NULL)
 
         self.mode = mode.SCREENCAST
+
+        screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
+        self.primarySourceHeight = screen.get_height ()
+        self.primarySourceWidth = screen.get_width ()
+        self.primarySource = "Screen"
+        self.secondarySource = None
+
+        self.player = gst.parse_launch ("ximagesrc use-damage=false show-pointer=true ! videoscale ! ximagesink  sync=false")
+
+        bus = self.player.get_bus()
+        bus.add_signal_watch()
+        bus.enable_sync_message_emission()
+        self.busSig1 = bus.connect("message", self.on_message)
+        self.busSig2 = bus.connect("sync-message::element",
+                                   self.on_sync_message)
+
+        self.xid = self.playerWindow.get_window ().get_xid()
+
+        self.player.set_state(gst.STATE_PLAYING)
+
+    def video_preview_webcam_only (self):
+
+        if (self.mode == mode.WEBCAM and self.mode is not None 
+            and self.player is not None):
+            return
+
+        if (self.player):
+            self.player.set_state(gst.STATE_NULL)
+
+        self.mode = mode.WEBCAM
+
+        print ("pipe with"+self.primarySource)
+
+        self.player = gst.parse_launch ("""v4l2src
+                                        device="""+self.primarySource+"""
+                                        name="cam1" ! videoflip
+                                        method=horizontal-flip !
+                                        ffmpegcolorspace ! videoscale !  ximagesink""")
+
+        bus = self.player.get_bus()
+        bus.add_signal_watch()
+        bus.enable_sync_message_emission()
+        self.busSig1 = bus.connect("message", self.on_message)
+        self.busSig2 = bus.connect("sync-message::element",
+                                   self.on_sync_message)
+
+        self.xid = self.playerWindow.get_window ().get_xid()
+
+        self.player.set_state(gst.STATE_PLAYING)
+
+
+
+    def video_preview_screencast_webcam (self):
+
+        if (self.mode == mode.SCREENCAST_PIP and self.mode is not None
+            and self.player is not None):
+            return
+
+        if (self.player):
+            self.player.set_state(gst.STATE_NULL)
+
+        self.mode = mode.SCREENCAST_PIP
 
         screen = Gdk.get_default_root_window ().get_display ().get_screen (0)
 
@@ -239,6 +337,10 @@ class NewRecording (Gtk.Dialog):
         self.player.set_state(gst.STATE_PLAYING)
 
     def video_preview_webcam_webcam (self):
+
+        if (self.mode == mode.TWOCAM and self.mode is not None and self.player
+            is not None):
+            return
 
         self.mode = mode.TWOCAM
 
@@ -324,4 +426,10 @@ class NewRecording (Gtk.Dialog):
         self.sameSecondaryAlert.hide ()
         self.secondaryCombo.set_active (-1)
         self.primaryCombo.set_active (-1)
-        self.video_preview_screencast_webcam ()
+
+        self.secondarySource = self.defaultSecondarySource
+
+        if (self.defaultSecondarySource == None):
+            self.video_preview_screencast_only ()
+        else:
+            self.video_preview_screencast_webcam ()
