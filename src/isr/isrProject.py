@@ -24,7 +24,7 @@
 
 import ConfigParser
 
-class dutProject:
+class isrProject:
     def __init__ (self, projectFile, projectName):
         self.projectFile = projectFile
         self.projectName = projectName
@@ -32,8 +32,8 @@ class dutProject:
         out = self.parser.read (projectFile)
         self.isNewFile = len (out)
 
-    def populate (self, dutMain, cols):
-        listStore = dutMain.listStore
+    def populate (self, isrMain, cols):
+        listStore = isrMain.listStore
         i = 0
 
         if self.isNewFile <= 0:
@@ -43,15 +43,15 @@ class dutProject:
         self.projectName = self.parser.get ("project", "name")
 
         #eeww
-        dutMain.projectLabel.set_text ("Project: "+self.projectName)
+        isrMain.projectLabel.set_text ("Project: "+self.projectName)
 
         try:
-            dutMain.projectDir = self.parser.get ("project", "dir")
+            isrMain.projectDir = self.parser.get ("project", "dir")
         except ConfigParser.NoOptionError:
             print ("Err: project directory key/value not found in config")
             return
 
-        dutMain.enable_buttons ()
+        isrMain.enable_buttons ()
 
         recording = "recording-"+str(i)
 
@@ -101,8 +101,8 @@ class dutProject:
             recording = "recording-"+str(i)
 
 
-    def dump (self, dutMain, cols):
-        listStore = dutMain.listStore
+    def dump (self, isrMain, cols):
+        listStore = isrMain.listStore
 
         listItr = listStore.get_iter_first ()
         i = 0
@@ -111,7 +111,7 @@ class dutProject:
             self.parser.add_section ("project")
 
         self.parser.set ("project", "name", self.projectName)
-        self.parser.set ("project", "dir", dutMain.projectDir)
+        self.parser.set ("project", "dir", isrMain.projectDir)
 
         while (listItr != None):
             recording = "recording-"+str (i)

@@ -30,8 +30,8 @@ class Muxer:
 
       self.projectDir = projectDir
 
-      primaryLocation = "\""+projectDir+"/primary-dut.webm\""
-      secondaryLocation = "\""+projectDir+"/secondary-dut.webm\""
+      primaryLocation = "\""+projectDir+"/primary-isr.webm\""
+      secondaryLocation = "\""+projectDir+"/secondary-isr.webm\""
       outLocation = "\""+projectDir+"/user-testing.webm\""
       finalLocation = "\""+projectDir+"/final.webm\""
 
@@ -79,7 +79,7 @@ class Muxer:
     def pipe2_changed_cb (self, bus, message):
       if message.type == gst.MESSAGE_ERROR:
           err, debug = message.parse_error()
-          print ("Err: dutMux pipe2: %s" % err, debug)
+          print ("Err: isrMux pipe2: %s" % err, debug)
 
       if message.type == gst.MESSAGE_EOS:
           print ("Info: Second pass done")
@@ -90,7 +90,7 @@ class Muxer:
           self.element2.set_state (gst.STATE_PLAYING)
       if message.type == gst.MESSAGE_ERROR:
           err, debug = message.parse_error()
-          print ("Err: dutMux pipe1: %s" % err, debug)
+          print ("Err: isrMux pipe1: %s" % err, debug)
 
     def pipe_report (self):
         positionMs, format = self.element.query_position (gst.FORMAT_TIME, None)

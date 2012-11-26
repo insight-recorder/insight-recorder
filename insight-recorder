@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""Dawati user testing tool is for creating observation videos of users performing tasks on desktop applications or other devices"""
+"""Insight recorder is a tool for creating observation videos of users performing tasks on desktop applications or other devices"""
 
 import sys
 import os
@@ -22,5 +22,5 @@ import os
 if __name__ == '__main__':
     if os.path.isdir('src'):
         sys.path.insert(0, 'src')
-    from dut import main
+    from isr import main
     sys.exit(main())

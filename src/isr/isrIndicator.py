@@ -27,7 +27,7 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 
 class Indicator:
-    def __init__ (self, dutMain):
+    def __init__ (self, isrMain):
       if os.environ.get('DESKTOP_SESSION') not in ('ubuntu', 'ubuntu-2d'):
         return;
       else:
@@ -37,7 +37,7 @@ class Indicator:
               print ("Error: we detected ubuntu as the desktop but found no appindicator library")
               return;
 
-      self.dutMain = dutMain
+      self.isrMain = isrMain
 
       self.indicator = AppIndicator3.Indicator.new ("dawati-user-testing",
                                                     Gtk.STOCK_MEDIA_RECORD,
@@ -50,13 +50,13 @@ class Indicator:
       self.stopRecord.show ()
       self.indicator.set_menu (menu)
 
-      dutMain.mainWindow.connect ("window-state-event", self.on_window_event)
+      isrMain.mainWindow.connect ("window-state-event", self.on_window_event)
 
     def on_window_event (self, widget, event):
       if (event.new_window_state == Gdk.WindowState.ICONIFIED and
-          self.dutMain.isRecording == True):
+          self.isrMain.isRecording == True):
         self.indicator.set_status (AppIndicator3.IndicatorStatus.ACTIVE)
       else:
         if (event.new_window_state == Gdk.WindowState.FOCUSED and
-            self.dutMain.isRecording == False):
+            self.isrMain.isRecording == False):
             self.indicator.set_status (AppIndicator3.IndicatorStatus.PASSIVE)

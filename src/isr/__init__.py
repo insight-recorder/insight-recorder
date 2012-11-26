@@ -45,17 +45,17 @@ import sys
 import signal
 
 import subprocess
-import dutWebcamRecord
-import dutScreencastRecord
-import dutMux
-import dutNewRecording
-import dutProject
-import dutIndicator
+import isrWebcamRecord
+import isrScreencastRecord
+import isrMux
+import isrNewRecording
+import isrProject
+import isrIndicator
 
 class m:
     TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS, POSX, POSY = range (8)
 
-class dutMain:
+class isrMain:
     def __init__(self):
 
         self.primary = None
@@ -79,7 +79,7 @@ class dutMain:
 
         self.check_gst_elements_available ()
 
-        self.indicator = dutIndicator.Indicator (self)
+        self.indicator = isrIndicator.Indicator (self)
 
         signal.signal(signal.SIGINT, self.close)
 
@@ -87,7 +87,7 @@ class dutMain:
         self.icon.set_from_stock (Gtk.STOCK_MEDIA_RECORD)
         self.icon.connect ("activate", self.stop_record)
 
-        self.mainWindow = Gtk.Window(title="Dawati user testing tool",
+        self.mainWindow = Gtk.Window(title="Insight recorder",
                                      resizable=False,
                                      icon_name=Gtk.STOCK_MEDIA_RECORD)
         self.mainWindow.connect("destroy", self.on_mainWindow_destroy)
@@ -202,7 +202,7 @@ class dutMain:
         self.mainWindow.add(outterBoxLayout)
         self.mainWindow.show_all()
 
-        self.currentRecording = dutNewRecording.NewRecording (self.mainWindow)
+        self.currentRecording = isrNewRecording.NewRecording (self.mainWindow)
 
         self.currentRecording.connect ("response",
                                        self.new_record_setup_done)
@@ -210,11 +210,11 @@ class dutMain:
         #argv always contains at least the execuratable as the first item
         if (len (sys.argv) > 1):
             #Rudimentary check to see if this is a file we want to open
-            if (sys.argv[1].find (".dut") > 0):
-                self.projectConfig = dutProject.dutProject (sys.argv[1], None)
+            if (sys.argv[1].find (".isr") > 0):
+                self.projectConfig = isrProject.isrProject (sys.argv[1], None)
                 self.projectConfig.populate (self, m)
             else:
-                print ("Warning: "+sys.argv[1]+" is not a valid Dawati user  testing project file (.dut)")
+                print ("Warning: "+sys.argv[1]+" is not a valid project file (.isr)")
 
     def check_gst_elements_available (self):
         message = ""
@@ -253,7 +253,7 @@ class dutMain:
                                         '/org/freedesktop/Notifications',
                                         'org.freedesktop.Notifications', None)
 
-        notify.Notify('(susssasa{sv}i)', 'dawati-user-testing', 1, 'gtk-ok',
+        notify.Notify('(susssasa{sv}i)', 'insight-recorder', 1, 'gtk-ok',
                       title, message,
                       [], {}, 10000)
 
@@ -296,8 +296,10 @@ class dutMain:
                                         Gtk.ResponseType.CANCEL,
                                         Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
         fileFilter = Gtk.FileFilter ()
-        fileFilter.set_name ("Dawati User testing project")
+        fileFilter.set_name ("Insight recorder projects")
+        #old project file extension
         fileFilter.add_pattern ("*.dut")
+        fileFilter.add_pattern ("*.isr")
         dialog.add_filter (fileFilter)
 
         response = dialog.run ()
@@ -306,7 +308,7 @@ class dutMain:
             projectFile = dialog.get_filename ()
             self.projectDir = GLib.path_get_dirname (projectFile)
             self.listStore.clear ()
-            self.projectConfig = dutProject.dutProject (projectFile, None)
+            self.projectConfig = isrProject.isrProject (projectFile, None)
             self.projectConfig.populate (self, m)
 
         dialog.destroy()
@@ -328,7 +330,7 @@ class dutMain:
             self.listStore.clear ()
             self.projectDir = dialog.get_filename ()
             projectName = GLib.filename_display_basename (self.projectDir)
-            self.projectConfig = dutProject.dutProject (self.projectDir+"/"+projectName+".dut", projectName)
+            self.projectConfig = isrProject.isrProject (self.projectDir+"/"+projectName+".isr", projectName)
 
             self.projectLabel.set_text ("Project: "+projectName)
             self.enable_buttons ()
@@ -382,7 +384,7 @@ class dutMain:
         posX = self.listStore.get_value (encodeItem, m.POSX)
         posY = self.listStore.get_value (encodeItem, m.POSY)
 
-        self.mux = dutMux.Muxer (recordingDir, posX, posY)
+        self.mux = isrMux.Muxer (recordingDir, posX, posY)
 
         GLib.timeout_add (500, self.update_progress_bar, encodeItem)
         print ("Info: run muxer")
@@ -465,13 +467,13 @@ class dutMain:
 
         #if we only has one video source call it final
         finalFile = recordingDir+"/final.webm"
-        primaryFile = recordingDir+"/primary-dut.webm"
-        secondaryFile = recordingDir+"/secondary-dut.webm"
+        primaryFile = recordingDir+"/primary-isr.webm"
+        secondaryFile = recordingDir+"/secondary-isr.webm"
 
         #shorten the var names :/
         primarySource = currentRecording.primarySource
         secondarySource = currentRecording.secondarySource
-        mode = dutNewRecording.mode
+        mode = isrNewRecording.mode
         secondaryWidth = currentRecording.secondarySourceWidth
         secondaryHeight = currentRecording.secondarySourceHeight
         primaryWidth = currentRecording.primarySourceWidth
@@ -479,32 +481,32 @@ class dutMain:
 
 
         if (currentRecording.mode == mode.WEBCAM):
-            self.primary = dutWebcamRecord.Webcam (finalFile,
+            self.primary = isrWebcamRecord.Webcam (finalFile,
                                                    primarySource,
                                                    secondaryWidth,
                                                    secondaryHeight,
                                                    False)
 
         elif (currentRecording.mode == mode.SCREENCAST):
-            self.primary = dutScreencastRecord.Screencast (finalFile)
+            self.primary = isrScreencastRecord.Screencast (finalFile)
 
         elif (currentRecording.mode == mode.SCREENCAST_PIP):
-            self.primary = dutScreencastRecord.Screencast (primaryFile)
+            self.primary = isrScreencastRecord.Screencast (primaryFile)
 
-            self.secondary = dutWebcamRecord.Webcam  (secondaryFile,
+            self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
                                                       secondarySource,
                                                       secondaryWidth,
                                                       secondaryHeight,
                                                       False)
 
         elif (currentRecording.mode == mode.TWOCAM):
-            self.primary = dutWebcamRecord.Webcam (primaryFile,
+            self.primary = isrWebcamRecord.Webcam (primaryFile,
                                                    primarySource,
                                                    primaryWidth,
                                                    primaryHeight,
                                                    True)
 
-            self.secondary = dutWebcamRecord.Webcam  (secondaryFile,
+            self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
                                                       secondarySource,
                                                       secondaryWidth,
                                                       secondaryHeight,
@@ -554,5 +556,5 @@ class dutMain:
         sys.exit (0)
 
 def main ():
-    dutMain()
+    isrMain()
     Gtk.main()

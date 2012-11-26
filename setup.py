@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
 """
-Installation module for Dawati User Testing.
+Installation module for insight recorder.
 """
 
 from distutils.core import setup
 
-setup(name='Dawati user testing',
-      version='0.4',
+setup(name='Insight recorder',
+      version='0.5',
       description='Tool for creating observation videos of users performing tasks on desktop applications or other devices',
       author=file('AUTHORS').read(),
-      url='http://github.com/dawati/dawati-user-testing',
-      packages=['dut'],
-      package_dir={'dut': 'src/dut'},
-      data_files = [('share/applications', ['data/dawati-user-testing.desktop'])],
+      url='http://github.com/dawati/insight-recorder',
+      packages=['isr'],
+      package_dir={'isr': 'src/isr'},
+      data_files = [('share/applications', ['data/insight-recorder.desktop'])],
 #      package_data={'none yet': ['*.xml']},
-      scripts=['dawati-user-testing'],
+      scripts=['insight-recorder'],
 )

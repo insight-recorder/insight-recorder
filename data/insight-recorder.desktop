@@ -1,8 +1,8 @@
 [Desktop Entry]
 Version=0.3
-Name=Dawati user testing tool
+Name=Insight recorder
 Type=Application
 Comment=Tool for creating observation videos of users performing tasks on desktop applications or other devices
-Exec=dawati-user-testing
+Exec=insight-recorder
 Icon=access
-Categories=Development
+Categories=Development;AudioVideo;Recorder
