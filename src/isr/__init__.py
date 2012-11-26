@@ -79,7 +79,6 @@ class isrMain:
 
         self.check_gst_elements_available ()
 
-        self.indicator = isrIndicator.Indicator (self)
 
         signal.signal(signal.SIGINT, self.close)
 
@@ -91,6 +90,8 @@ class isrMain:
                                      resizable=False,
                                      icon_name=Gtk.STOCK_MEDIA_RECORD)
         self.mainWindow.connect("destroy", self.on_mainWindow_destroy)
+
+        self.indicator = isrIndicator.Indicator (self)
 
         outterBoxLayout = Gtk.VBox (spacing=5, homogeneous=False)
 

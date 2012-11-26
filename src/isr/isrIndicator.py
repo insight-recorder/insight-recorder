@@ -18,24 +18,25 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses>
 #
-
-
-
-
 import os
+
+if os.environ.get('DESKTOP_SESSION') not in ('ubuntu', 'ubuntu-2d'):
+   isUnity = False
+else:
+    try:
+	from gi.repository import AppIndicator3
+	isUnity = True
+    except ImportError:
+	print ("Error: we detected ubuntu as the desktop but found no appindicator library")
+	isUnity = False
+
 from gi.repository import Gtk
 from gi.repository import Gdk
 
 class Indicator:
     def __init__ (self, isrMain):
-      if os.environ.get('DESKTOP_SESSION') not in ('ubuntu', 'ubuntu-2d'):
-        return;
-      else:
-          try:
-              from gi.repository import AppIndicator3 as AppIndicator
-          except ImportError:
-              print ("Error: we detected ubuntu as the desktop but found no appindicator library")
-              return;
+      if (isUnity is not True):
+	return;
 
       self.isrMain = isrMain
 
