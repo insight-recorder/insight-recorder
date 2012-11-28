@@ -25,7 +25,8 @@ import gst
 class Screencast:
     def __init__(self, fileOutputLocation):
 
-      self.element = gst.parse_launch ("""ximagesrc ! queue ! videorate
+      self.element = gst.parse_launch ("""ximagesrc use-damage=false
+                                       do-timestamp=true ! queue ! videorate
                                        force-fps=15/1 !
                                        video/x-raw-rgb,framerate=15/1 !
                                        ffmpegcolorspace !
