@@ -82,6 +82,7 @@ class isrMain:
 
         signal.signal(signal.SIGINT, self.close)
 
+        # UI declaration
         self.icon = Gtk.StatusIcon (visible=False)
         self.icon.set_from_stock (Gtk.STOCK_MEDIA_RECORD)
         self.icon.connect ("activate", self.stop_record)
@@ -93,7 +94,7 @@ class isrMain:
 
         self.indicator = isrIndicator.Indicator (self)
 
-        outterBoxLayout = Gtk.VBox (spacing=5, homogeneous=False)
+        outterBoxLayout = Gtk.VBox (homogeneous=False)
 
         menu = Gtk.Toolbar ()
         menu.get_style_context ().add_class (Gtk.STYLE_CLASS_PRIMARY_TOOLBAR)
@@ -110,6 +111,14 @@ class isrMain:
 
         menu.insert (fileNew, 0)
         menu.insert (fileOpen, 1)
+
+        self.recordingInfoBar = Gtk.InfoBar ()
+        self.recordingInfoBar.add_button ("Stop recording", Gtk.ResponseType.OK)
+        self.recordingInfoBar.set_message_type (Gtk.MessageType.INFO)
+        self.recordingInfoBar.connect ("response", self.stop_record)
+        recordingInfoBarArea = self.recordingInfoBar.get_content_area ()
+        recordingInfoBarArea.pack_start (Gtk.Label ("Recording in progress"),
+                                         False, False, 3)
 
         dateLabel = Gtk.Label ("Date")
         durationLabel = Gtk.Label ("Duration")
@@ -183,7 +192,6 @@ class isrMain:
         self.buttonBox.pack_start (self.recordButton, False, False, 3)
         self.buttonBox.pack_start (self.encodeButton, False, False, 3)
         self.buttonBox.pack_start (self.recordingDeleteButton, False, False, 3)
-        self.buttonBox.hide ()
 
         # Box for rest of the UI which doesn't span the whole window
         innerVbox = Gtk.VBox (spacing=5,
@@ -197,11 +205,14 @@ class isrMain:
 
 
         # Main container in window
-        outterBoxLayout.pack_start (menu, False, False, 3)
-        outterBoxLayout.pack_start (innerVbox, False, False, 3)
+        outterBoxLayout.pack_start (menu, False, False, 0)
+        outterBoxLayout.pack_start (self.recordingInfoBar, False, False, 0)
+        outterBoxLayout.pack_start (innerVbox, False, False, 0)
 
         self.mainWindow.add(outterBoxLayout)
         self.mainWindow.show_all()
+
+        self.recordingInfoBar.hide ()
 
         self.currentRecording = isrNewRecording.NewRecording (self.mainWindow)
 
@@ -516,19 +527,22 @@ class isrMain:
         if (self.secondary is not None):
             print ("Info: secondary source "+secondarySource)
             self.secondary.record (1)
-            self.isRecording = True
 
         if (self.primary is not None):
             print ("Info: primary source "+primarySource)
             self.primary.record (1)
+
+        if (self.primary or self.secondary is not None):
             self.isRecording = True
+            self.recordingInfoBar.show ()
 
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
          self.currentRecording.open ()
 
-    def stop_record (self, button):
+    def stop_record (self, *remains):
         self.isRecording = False
+        self.recordingInfoBar.hide ()
 
         self.primary.record (0)
         if (self.secondary is not None):
