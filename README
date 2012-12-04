@@ -19,7 +19,7 @@ $ python setup.py install --home
 
 == run ==
 
-dawati-user-testing
+insight-recorder
 
 == Required dependencies ==
 

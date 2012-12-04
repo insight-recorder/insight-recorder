@@ -40,7 +40,7 @@ class Indicator:
 
       self.isrMain = isrMain
 
-      self.indicator = AppIndicator3.Indicator.new ("dawati-user-testing",
+      self.indicator = AppIndicator3.Indicator.new ("insight-recorder",
                                                     Gtk.STOCK_MEDIA_RECORD,
                                                     AppIndicator3.IndicatorCategory.APPLICATION_STATUS)
 

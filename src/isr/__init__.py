@@ -362,7 +362,7 @@ class isrMain:
 
         if percentDone == 100:
             name = self.listStore.get_value (encodeItem, m.TITLE)
-            self.notification ("Dawati user testing",
+            self.notification ("Insight recorder",
                                "Encoding of "+name+" done")
             self.listStore.set_value (encodeItem, m.EXPORT, False)
             if (self.encodeQueue != None):
