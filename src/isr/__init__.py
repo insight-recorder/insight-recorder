@@ -28,7 +28,6 @@ except ImportError:
 
 # These are dependencies of Gtk so they should exist if Gtk does
 from gi.repository import GLib
-from gi.repository import Gdk
 from gi.repository import Gio
 
 try:
@@ -44,7 +43,6 @@ from datetime import datetime
 import sys
 import signal
 
-import subprocess
 import isrWebcamRecord
 import isrScreencastRecord
 import isrMux
@@ -119,9 +117,6 @@ class isrMain:
         recordingInfoBarArea = self.recordingInfoBar.get_content_area ()
         recordingInfoBarArea.pack_start (Gtk.Label ("Recording in progress"),
                                          False, False, 3)
-
-        dateLabel = Gtk.Label ("Date")
-        durationLabel = Gtk.Label ("Duration")
 
         self.projectLabel = Gtk.Label (halign=Gtk.Align.START)
         self.projectLabel.set_markup ("<span style='italic'>No project open</span>")

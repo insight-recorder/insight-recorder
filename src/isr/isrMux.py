@@ -19,11 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses>
 #
 
-from gi.repository import GLib
-from gi.repository import Gdk
 import gst
-import time
-import subprocess
 
 class Muxer:
     def __init__(self, projectDir, posX, posY):

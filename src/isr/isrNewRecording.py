@@ -20,9 +20,6 @@
 #
 
 import gst
-import time
-
-from datetime import datetime
 
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -54,8 +51,8 @@ class NewRecording (Gtk.Dialog):
         self.secondarySourceHeight = 0
         self.secondarySourceWidth = 0
 
-        cancel = self.add_button ("Cancel", Gtk.ResponseType.CANCEL)
-        accept = self.add_button ("Start recording", Gtk.ResponseType.ACCEPT)
+        self.add_button ("Cancel", Gtk.ResponseType.CANCEL)
+        self.add_button ("Start recording", Gtk.ResponseType.ACCEPT)
 
         # UI Elements for create recording dialog
         label = Gtk.Label (label="Recording name:", halign=Gtk.Align.START)
@@ -109,10 +106,10 @@ class NewRecording (Gtk.Dialog):
         self.playerWindow.set_size_request (600, 300)
 
         # TODO
-        audioToggle = Gtk.Switch ()
-        audioSource = Gtk.ComboBoxText ()
+        #audioToggle = Gtk.Switch ()
+        #audioSource = Gtk.ComboBoxText ()
 
-        audioBox = Gtk.HBox ()
+        #audioBox = Gtk.HBox ()
 
         contentArea = self.get_content_area ()
         contentArea.set_spacing (8)
@@ -120,7 +117,7 @@ class NewRecording (Gtk.Dialog):
         contentArea.add (self.entry)
         contentArea.add (devicesBox)
         contentArea.add (self.playerWindow)
-        contentArea.add (audioBox)
+        #contentArea.add (audioBox)
 
     def devices_changed (self, client, action, device):
         deviceName = device.get_name ()
