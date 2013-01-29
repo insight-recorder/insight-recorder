@@ -23,8 +23,9 @@ import gst
 
 
 class Screencast:
-    def __init__(self, fileOutputLocation):
+    def __init__(self, fileOutputLocation, recording_finished_func):
 
+      self.duration = 0
       self.element = gst.parse_launch ("""ximagesrc use-damage=false
                                        do-timestamp=true ! queue ! videorate
                                        force-fps=15/1 !
@@ -33,8 +34,10 @@ class Screencast:
                                        video/x-raw-yuv,framerate=15/1 ! vp8enc
                                        quality=8 threads=2 speed=2 mode=1 !
                                        queue ! webmmux !
-                                       filesink
+                                       filesink buffer-mode=unbuffered
                                        location="""+fileOutputLocation+"""""")
+
+      self.recording_finished_func = recording_finished_func;
 
       pipebus = self.element.get_bus ()
 
@@ -45,10 +48,14 @@ class Screencast:
         if message.type == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
             print "Error: %s" % err, debug
-            self.player.set_state(gst.STATE_NULL)
+            self.player.set_state (gst.STATE_NULL)
         if message.type == gst.MESSAGE_EOS:
+            # The end position is approx the duration
+            self.duration, format = self.element.query_position (gst.FORMAT_TIME,
+                                                                 None)
             # Null/Stop
             self.element.set_state (gst.STATE_NULL)
+            self.recording_finished_func ()
 
     def record (self, start):
       if start == 1:
@@ -60,7 +67,5 @@ class Screencast:
 
 
     def get_duration (self):
-        self.duration, format = self.element.query_position (gst.FORMAT_TIME,
-                                                             None)
         return self.duration
 

@@ -74,9 +74,9 @@ class isrMain:
         self.listItr = None
         self.currentRecording = None
         self.isRecording = False
+        self.stopRecordButton = None
 
         self.check_gst_elements_available ()
-
 
         signal.signal(signal.SIGINT, self.close)
 
@@ -110,13 +110,18 @@ class isrMain:
         menu.insert (fileNew, 0)
         menu.insert (fileOpen, 1)
 
+         #InfoBar
         self.recordingInfoBar = Gtk.InfoBar ()
-        self.recordingInfoBar.add_button ("Stop recording", Gtk.ResponseType.OK)
+        self.stopRecordButton = self.recordingInfoBar.add_button ("Stop recording", Gtk.ResponseType.OK)
         self.recordingInfoBar.set_message_type (Gtk.MessageType.INFO)
         self.recordingInfoBar.connect ("response", self.stop_record)
         recordingInfoBarArea = self.recordingInfoBar.get_content_area ()
         recordingInfoBarArea.pack_start (Gtk.Label ("Recording in progress"),
                                          False, False, 3)
+        self.eosSpinner = Gtk.Spinner ()
+        self.recordingInfoBar.get_action_area ().pack_start (self.eosSpinner,
+                                                             False, False, 3)
+        self.eosSpinner.hide ()
 
         self.projectLabel = Gtk.Label (halign=Gtk.Align.START)
         self.projectLabel.set_markup ("<span style='italic'>No project open</span>")
@@ -289,10 +294,10 @@ class isrMain:
         self.listStore[path][m.EXPORT] = False
         print ("delete toggled")
 
-    def enable_buttons (self):
-        self.recordButton.set_sensitive (True)
-        self.encodeButton.set_sensitive (True)
-        self.recordingDeleteButton.set_sensitive (True)
+    def enable_buttons (self, enable):
+        self.recordButton.set_sensitive (enable)
+        self.encodeButton.set_sensitive (enable)
+        self.recordingDeleteButton.set_sensitive (enable)
 
 
     def open_file_chooser (self, menuitem, window):
@@ -340,7 +345,7 @@ class isrMain:
             self.projectConfig = isrProject.isrProject (self.projectDir+"/"+projectName+".isr", projectName)
 
             self.projectLabel.set_text ("Project: "+projectName)
-            self.enable_buttons ()
+            self.enable_buttons (True)
 
         dialog.destroy()
 
@@ -492,52 +497,82 @@ class isrMain:
                                                    primarySource,
                                                    secondaryWidth,
                                                    secondaryHeight,
-                                                   False)
+                                                   False,
+                                                   self.record_stopped_cb)
 
         elif (currentRecording.mode == mode.SCREENCAST):
-            self.primary = isrScreencastRecord.Screencast (finalFile)
+            self.primary = isrScreencastRecord.Screencast (finalFile,
+                                                           self.record_stopped_cb)
 
         elif (currentRecording.mode == mode.SCREENCAST_PIP):
-            self.primary = isrScreencastRecord.Screencast (primaryFile)
+            self.primary = isrScreencastRecord.Screencast (primaryFile,
+                                                           self.record_stopped_cb)
 
             self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
                                                       secondarySource,
                                                       secondaryWidth,
                                                       secondaryHeight,
-                                                      False)
+                                                      False,
+                                                      self.record_stopped_cb)
 
         elif (currentRecording.mode == mode.TWOCAM):
             self.primary = isrWebcamRecord.Webcam (primaryFile,
                                                    primarySource,
                                                    primaryWidth,
                                                    primaryHeight,
-                                                   True)
+                                                   True,
+                                                   self.record_stopped_cb)
 
             self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
                                                       secondarySource,
                                                       secondaryWidth,
                                                       secondaryHeight,
-                                                      False)
+                                                      False,
+                                                      self.record_stopped_cb)
 
         if (self.secondary is not None):
             print ("Info: secondary source "+secondarySource)
             self.secondary.record (1)
+            self.isRecording += 1
 
         if (self.primary is not None):
             print ("Info: primary source "+primarySource)
             self.primary.record (1)
+            self.isRecording += 1
 
         if (self.primary or self.secondary is not None):
-            self.isRecording = True
+            self.stopRecordButton.show ()
             self.recordingInfoBar.show ()
+            self.eosSpinner.hide ()
+            self.enable_buttons (False)
 
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
          self.currentRecording.open ()
 
+    def record_stopped_cb (self):
+        self.isRecording -= 1
+
+        if (self.isRecording == 0):
+            duration = self.primary.get_duration ()
+            #duration to seconds
+            duration = round ((duration*0.000000001))
+
+            self.listStore.set_value (self.listItr, m.DURATION, int (duration))
+
+            self.primary = None
+            self.secondary = None
+
+            self.eosSpinner.hide ()
+            self.eosSpinner.stop ();
+            self.recordingInfoBar.hide ()
+            self.enable_buttons (True)
+
+
     def stop_record (self, *remains):
-        self.isRecording = False
-        self.recordingInfoBar.hide ()
+        self.stopRecordButton.hide ();
+        self.eosSpinner.show ()
+        self.eosSpinner.start ();
 
         self.primary.record (0)
         if (self.secondary is not None):
@@ -546,16 +581,6 @@ class isrMain:
             #We had no secondary so there is no need to do an encode
             self.listStore.set_value (self.listItr, m.PROGRESS, int (100))
 
-        duration = self.primary.get_duration ()
-
-        #duration to seconds
-        duration = round ((duration*0.000000001))
-
-        self.listStore.set_value (self.listItr, m.DURATION, int (duration))
-
-
-        self.primary = None
-        self.secondary = None
 
         #Show the window again
         self.mainWindow.deiconify ()

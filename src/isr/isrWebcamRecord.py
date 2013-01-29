@@ -22,7 +22,10 @@
 import gst
 
 class Webcam:
-    def __init__(self, fileOutputLocation, device, width, height, Vflip):
+    def __init__(self, fileOutputLocation, device, width, height, Vflip,
+                recording_finished_func):
+
+      self.recording_finished_func = recording_finished_func
       self.duration = 0
       widthStr = str (width)
       heightStr = str (height)
@@ -61,6 +64,7 @@ class Webcam:
                                                                  None)
             # Null/Stop
             self.element.set_state (gst.STATE_NULL)
+            self.recording_finished_func ()
 
     def record (self, start):
       if start == 1:
