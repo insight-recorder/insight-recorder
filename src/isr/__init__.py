@@ -75,6 +75,7 @@ class isrMain:
         self.currentRecording = None
         self.isRecording = False
         self.stopRecordButton = None
+        self.recordingText = "Recording in progress"
 
         self.check_gst_elements_available ()
 
@@ -116,7 +117,8 @@ class isrMain:
         self.recordingInfoBar.set_message_type (Gtk.MessageType.INFO)
         self.recordingInfoBar.connect ("response", self.stop_record)
         recordingInfoBarArea = self.recordingInfoBar.get_content_area ()
-        recordingInfoBarArea.pack_start (Gtk.Label ("Recording in progress"),
+        self.infoBarLabel = Gtk.Label (self.recordingText)
+        recordingInfoBarArea.pack_start (self.infoBarLabel,
                                          False, False, 3)
         self.eosSpinner = Gtk.Spinner ()
         self.recordingInfoBar.get_action_area ().pack_start (self.eosSpinner,
@@ -566,11 +568,13 @@ class isrMain:
             self.eosSpinner.hide ()
             self.eosSpinner.stop ();
             self.recordingInfoBar.hide ()
+            self.infoBarLabel.set_text (self.recordingText)
             self.enable_buttons (True)
 
 
     def stop_record (self, *remains):
         self.stopRecordButton.hide ();
+        self.infoBarLabel.set_text ("Processing...")
         self.eosSpinner.show ()
         self.eosSpinner.start ();
 
