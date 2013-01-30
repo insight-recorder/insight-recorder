@@ -6,4 +6,5 @@ TODO list
  - labels for toolbar icons
  - Make ximagesrc capture just the primary monitor - might avoid crash when showing preview
  - Microphone levels
+ - Streaming support
  - Input selection/pimary/secondary still akward
