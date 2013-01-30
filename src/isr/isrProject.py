@@ -51,7 +51,7 @@ class isrProject:
             print ("Err: project directory key/value not found in config")
             return
 
-        isrMain.enable_buttons ()
+        isrMain.enable_buttons (True)
 
         recording = "recording-"+str(i)
 
