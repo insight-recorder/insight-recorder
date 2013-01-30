@@ -574,7 +574,7 @@ class isrMain:
 
     def stop_record (self, *remains):
         self.stopRecordButton.hide ();
-        self.infoBarLabel.set_text ("Processing...")
+        self.infoBarLabel.set_text ("Processing ...")
         self.eosSpinner.show ()
         self.eosSpinner.start ();
 
