@@ -25,6 +25,10 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GdkX11
 from gi.repository import GUdev
+from gi.repository import GLib
+
+import isrVUMeter
+
 Gdk.threads_init ()
 
 class mode:
@@ -42,6 +46,7 @@ class NewRecording (Gtk.Dialog):
         self.busSig2 = None
         self.recordingTitle = None
         self.mode = None
+        self.audioLevel = None
 
         self.secondarySource = None
         self.primarySource = "Screen"
@@ -106,18 +111,33 @@ class NewRecording (Gtk.Dialog):
         self.playerWindow.set_size_request (600, 300)
 
         # TODO
-        #audioToggle = Gtk.Switch ()
-        #audioSource = Gtk.ComboBoxText ()
+        audioLabel = Gtk.Label ("Audio level:")
+        audioButton = Gtk.Button (label="Audio settings")
+        audioButton.connect ("clicked", self.launch_audio_settings);
+        self.audioLevel = isrVUMeter.VUMeter ()
+        self.audioLevel.set_valign (Gtk.Align.CENTER)
 
-        #audioBox = Gtk.HBox ()
+        audioBox = Gtk.HBox ()
+        audioBox.pack_start (audioLabel, False, False, 3)
+        audioBox.pack_start (self.audioLevel, False, True, 3)
+        audioBox.pack_end (audioButton, False, True, 3)
+
+        recordingNameBox = Gtk.HBox ()
+        recordingNameBox.set_spacing (8)
+        recordingNameBox.pack_start (label, False, False, 0)
+        recordingNameBox.pack_start (self.entry, True, True, 0)
 
         contentArea = self.get_content_area ()
         contentArea.set_spacing (8)
-        contentArea.add (label)
-        contentArea.add (self.entry)
+        contentArea.set_margin_top (8)
+        contentArea.add (recordingNameBox)
         contentArea.add (devicesBox)
         contentArea.add (self.playerWindow)
-        #contentArea.add (audioBox)
+        contentArea.add (audioBox)
+
+    def launch_audio_settings (self, data):
+        GLib.spawn_command_line_async ("gnome-control-center sound")
+
 
     def devices_changed (self, client, action, device):
         deviceName = device.get_name ()
@@ -455,6 +475,7 @@ class NewRecording (Gtk.Dialog):
         self.player.set_state (gst.STATE_NULL)
         self.player.get_state (gst.STATE_NULL)
         self.player = None
+        self.audioLevel.set_active (False)
 
     def open (self):
         self.show_all ()
@@ -462,6 +483,7 @@ class NewRecording (Gtk.Dialog):
         self.sameSecondaryAlert.hide ()
         self.secondaryCombo.set_active (-1)
         self.primaryCombo.set_active (-1)
+        self.audioLevel.set_active (True)
 
         self.secondarySource = self.defaultSecondarySource
 
