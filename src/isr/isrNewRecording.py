@@ -484,6 +484,8 @@ class NewRecording (Gtk.Dialog):
         self.secondaryCombo.set_active (-1)
         self.primaryCombo.set_active (-1)
         self.audioLevel.set_active (True)
+        self.entry.set_text ("")
+        self.entry.grab_focus ()
 
         self.secondarySource = self.defaultSecondarySource
 
