@@ -75,6 +75,4 @@ class Webcam:
         self.element.send_event (gst.event_new_eos ())
 
     def get_duration (self):
-        self.duration, format = self.element.query_position (gst.FORMAT_TIME,
-                                                                 None)
         return self.duration
