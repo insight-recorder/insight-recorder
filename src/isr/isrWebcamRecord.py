@@ -22,16 +22,18 @@
 import gst
 
 class Webcam:
-    def __init__(self, fileOutputLocation, device, width, height, Vflip,
-                recording_finished_func):
+    def __init__(self, fileOutputLocation, device, width, height, vFlip,
+                recording_finished_func, screencast):
 
       self.recording_finished_func = recording_finished_func
       self.duration = 0
       widthStr = str (width)
       heightStr = str (height)
       flip = ""
+      primary = fileOutputLocation + "primary.webm"
+      secondary = fileOutputLocation + "secondary.webm"
 
-      if Vflip == True:
+      if vFlip == True:
           flip = " videoflip method=vertical-flip !"
 
       self.element = gst.parse_launch ("""v4l2src device="""+device+""" ! videorate
@@ -46,7 +48,20 @@ class Webcam:
                                        queue ! audioconvert ! queue !
                                        vorbisenc ! queue ! mux.
                                        webmmux name=mux ! filesink
-                                       location="""+fileOutputLocation+"""""")
+                                       location="""+secondary+"""""")
+
+      if screencast == True:
+          screencastElement = gst.parse_launch ("""ximagesrc use-damage=false
+                                         do-timestamp=true ! queue ! videorate
+                                         force-fps=15/1 !
+                                         video/x-raw-rgb,framerate=15/1 !
+                                         ffmpegcolorspace !
+                                         video/x-raw-yuv,framerate=15/1 ! vp8enc
+                                         quality=8 threads=2 speed=2 mode=1 !
+                                         queue ! webmmux !
+                                         filesink buffer-mode=unbuffered
+                                         location="""+primary+"""""")
+          self.element.add (screencastElement)
 
       pipebus = self.element.get_bus ()
 

@@ -507,15 +507,24 @@ class isrMain:
                                                            self.record_stopped_cb)
 
         elif (currentRecording.mode == mode.SCREENCAST_PIP):
-            self.primary = isrScreencastRecord.Screencast (primaryFile,
-                                                           self.record_stopped_cb)
+            self.primary = isrWebcamRecord.Webcam  (recordingDir,
+                                                    secondarySource,
+                                                    secondaryWidth,
+                                                    secondaryHeight,
+                                                    False,
+                                                    self.record_stopped_cb,
+                                                    True)
 
-            self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
-                                                      secondarySource,
-                                                      secondaryWidth,
-                                                      secondaryHeight,
-                                                      False,
-                                                      self.record_stopped_cb)
+
+            #self.primary = isrScreencastRecord.Screencast (primaryFile,
+#                                                           self.record_stopped_cb)
+
+            #self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
+             #                                         secondarySource,
+              #                                        secondaryWidth,
+               #                                       secondaryHeight,
+                #                                      False,
+                 #                                     self.record_stopped_cb)
 
         elif (currentRecording.mode == mode.TWOCAM):
             self.primary = isrWebcamRecord.Webcam (primaryFile,
