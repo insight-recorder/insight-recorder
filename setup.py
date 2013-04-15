@@ -7,7 +7,7 @@ Installation module for insight recorder.
 from distutils.core import setup
 
 setup(name='Insight recorder',
-      version='0.5',
+      version='0.6',
       description='Tool for creating observation videos of users performing tasks on desktop applications or other devices',
       author=file('AUTHORS').read(),
       url='http://github.com/dawati/insight-recorder',
