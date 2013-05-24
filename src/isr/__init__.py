@@ -589,7 +589,9 @@ class isrMain:
         #Show the window again
         self.mainWindow.deiconify ()
         self.mainWindow.present ()
-        self.icon.set_visible (False)
+        #BUG in gtk+ 3.8.0
+        #https://bugzilla.gnome.org/show_bug.cgi?id=696882
+        #self.icon.set_visible (False)
 
     def close (self, signal, frame):
         sys.exit (0)
