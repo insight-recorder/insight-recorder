@@ -4,17 +4,14 @@ This is a prototype application for recording screencasts and webcams simultaneo
 
 == system install ==
 
-$ sudo python setup.py install --prefix=/usr
-
-- see also python setup.py install --help
+$ ./autogen.sh --prefix=/usr
+$ sudo make install
 
 == single user install ==
 
-Either just run from current directory or use:
+Either just run from current directory or use your own prefix.
 
-$ python setup.py install --home
-
-- see also python setup.py install --help
+$ ./autogen.sh --prefix=$HOME/install
 
 
 == run ==
