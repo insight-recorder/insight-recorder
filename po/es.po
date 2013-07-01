@@ -1,0 +1,188 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-07-01 17:36+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../src/isr/__init__.py:26
+msgid "Err: Gtk3 introspection not found try installing gir-gtk-3.0 or similar"
+msgstr "Err: Falta Gtk3 introspection. Instala gir-gtk-3.0 o equivalente"
+
+#: ../src/isr/__init__.py:36
+msgid "Err: Python gst not found try installing python-gst or similar"
+msgstr "Err: Falta Python gst. Instala python-gst o equivalente"
+
+#: ../src/isr/__init__.py:90
+msgid "Recording in progress"
+msgstr "Grabación en curso"
+
+#: ../src/isr/__init__.py:114 ../src/isr/__init__.py:345
+msgid "New project"
+msgstr "Nuevo proyecto"
+
+#: ../src/isr/__init__.py:115
+msgid "Create a new project"
+msgstr "Crea un proyecto"
+
+#: ../src/isr/__init__.py:119
+msgid "Open project"
+msgstr "Selecciona proyecto"
+
+#: ../src/isr/__init__.py:121
+msgid "Open an existing project"
+msgstr "Selecciona un proyecto existente"
+
+#: ../src/isr/__init__.py:128 ../src/isr/isrIndicator.py:48
+msgid "Stop recording"
+msgstr "Para de grabar"
+
+#: ../src/isr/__init__.py:141
+msgid "No project open"
+msgstr "No has seleccionado ningún proyecto"
+
+#: ../src/isr/__init__.py:143 ../src/isr/isrNewRecording.py:40
+msgid "Create recording"
+msgstr "Nueva grabación"
+
+#: ../src/isr/__init__.py:144
+msgid "Create a new recording"
+msgstr "Crea una grabación"
+
+#: ../src/isr/__init__.py:148 ../src/isr/__init__.py:194
+msgid "Export"
+msgstr "Exportar"
+
+#: ../src/isr/__init__.py:149
+msgid "Encode selected sessions"
+msgstr "Codifica las grabaciones seleccionadas"
+
+#: ../src/isr/__init__.py:153
+msgid "Delete"
+msgstr "Borrar"
+
+#: ../src/isr/__init__.py:154
+msgid "Delete selected sessions"
+msgstr "Borra las grabaciones seleccionadas"
+
+#: ../src/isr/__init__.py:168
+msgid "Recording name"
+msgstr "Nombre de la grabación"
+
+#: ../src/isr/__init__.py:176
+msgid "Date"
+msgstr "Fecha"
+
+#: ../src/isr/__init__.py:181
+msgid "Duration"
+msgstr "Duración"
+
+#: ../src/isr/__init__.py:251
+msgid ""
+"Element vp8enc missing: this is normally found in package gstreamer-plugins-"
+"bad\n"
+msgstr ""
+"Falta el componente vp8enc, que suele venir en el paquete gstreamer-plugins-"
+"bad\n"
+
+#: ../src/isr/__init__.py:254
+msgid ""
+"Element videomixer missing: this is normally found in package gstreamer-"
+"plugins-good\n"
+msgstr ""
+"Falta el componente videomixer, que suele venir en el paquete gstreamer-"
+"plugins-good\n"
+
+#: ../src/isr/__init__.py:258
+msgid ""
+"Element videoscale missing: this is normally found in package gstreamer-"
+"plugins-base\n"
+msgstr ""
+"Falta el componente videoscale, que suele venir en el paquete gstreamer-"
+"plugins-base\n"
+
+#: ../src/isr/__init__.py:262
+msgid "Element alsasrc missing: this is normally found in gstreamer-alsa\n"
+msgstr "Falta el componente alsasrc, que suele venir en el paquete gstreamer-alsa\n"
+
+#: ../src/isr/__init__.py:269
+msgid "Required gstreamer element missing"
+msgstr "Falta un componente imprescindible de gstreamer"
+
+#: ../src/isr/__init__.py:319
+msgid "Open Project"
+msgstr "Selecciona proyecto"
+
+#: ../src/isr/__init__.py:326
+msgid "Insight recorder projects"
+msgstr "Proyectos de Insight Recorder"
+
+#: ../src/isr/__init__.py:362
+msgid "Project: "
+msgstr "Proyecto: "
+
+#: ../src/isr/__init__.py:381
+msgid "Encoding of "
+msgstr "Codificación de "
+
+#: ../src/isr/__init__.py:381
+msgid " done"
+msgstr " listo"
+
+#: ../src/isr/__init__.py:452
+msgid "Move '"
+msgstr "Tirar '"
+
+#: ../src/isr/__init__.py:452
+msgid "' to trash?"
+msgstr "' en la papelera?"
+
+#: ../src/isr/__init__.py:454
+msgid "This operation cannot be undone."
+msgstr "Esta operación es irreversible"
+
+#: ../src/isr/__init__.py:590
+msgid "Processing ..."
+msgstr "Procesando ..."
+
+#: ../src/isr/isrNewRecording.py:59
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: ../src/isr/isrNewRecording.py:60
+msgid "Start recording"
+msgstr "Comenzar grabación"
+
+#. UI Elements for create recording dialog
+#: ../src/isr/isrNewRecording.py:63
+msgid "Recording name:"
+msgstr "Nombre de la grabación:"
+
+#: ../src/isr/isrNewRecording.py:69
+msgid "Primary capture:"
+msgstr "Captura principal:"
+
+#: ../src/isr/isrNewRecording.py:93
+msgid "Secondary capture:"
+msgstr "Captura secundaria:"
+
+#. TODO
+#: ../src/isr/isrNewRecording.py:114
+msgid "Audio level:"
+msgstr "Nivel de sonido:"
+
+#: ../src/isr/isrNewRecording.py:115
+msgid "Audio settings"
+msgstr "Ajustes de sonido"
