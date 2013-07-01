@@ -1,19 +1,3 @@
 #!/usr/bin/env python
 
-"""
-Installation module for insight recorder.
-"""
-
-from distutils.core import setup
-
-setup(name='Insight recorder',
-      version='0.7',
-      description='Tool for creating observation videos of users performing tasks on desktop applications or other devices',
-      author=file('AUTHORS').read(),
-      url='http://github.com/dawati/insight-recorder',
-      packages=['isr'],
-      package_dir={'isr': 'src/isr'},
-      data_files = [('share/applications', ['data/insight-recorder.desktop'])],
-#      package_data={'none yet': ['*.xml']},
-      scripts=['insight-recorder'],
-)
+print ("\n\nThis is the legacy method of installing and is no longer supported, please use autogen.sh and install using \"make install\". \n\n")

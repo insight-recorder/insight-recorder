@@ -1,0 +1,4 @@
+[encoding: UTF-8]
+src/isr/__init__.py
+src/isr/isrIndicator.py
+src/isr/isrNewRecording.py

@@ -1,0 +1,10 @@
+[Desktop Entry]
+_Name=Insight recorder
+_Comment=Tool for creating observation videos of users performing tasks on desktop applications or other devices
+_keywords=testing;screencast;recording;
+Exec=insight-recorder
+Icon=access
+Terminal=false
+Type=Application
+Categories=Development;AudioVideo;Recorder
+Version=@VERSION@
