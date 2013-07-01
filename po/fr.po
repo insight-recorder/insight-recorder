@@ -54,7 +54,7 @@ msgid "No project open"
 msgstr "Aucun projet ouvert"
 
 #: ../src/isr/__init__.py:143
-#, fuzzy
+#: ../src/isr/isrNewRecording.py:40
 msgid "Create recording"
 msgstr "Créer un enregistrement"
 
@@ -159,11 +159,6 @@ msgstr "Cette opération ne peut être annulée"
 #: ../src/isr/__init__.py:590
 msgid "Processing ..."
 msgstr "Traitement ..."
-
-#: ../src/isr/isrNewRecording.py:40
-#, fuzzy
-msgid "Create recoding"
-msgstr "Créer réencodage"
 
 #: ../src/isr/isrNewRecording.py:59
 msgid "Cancel"
