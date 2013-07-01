@@ -37,7 +37,7 @@ class mode:
 class NewRecording (Gtk.Dialog):
     def __init__(self, mainWindow):
 
-        Gtk.Dialog.__init__ (self, _("Create recoding"),
+        Gtk.Dialog.__init__ (self, _("Create recording"),
                              mainWindow,
                              Gtk.DialogFlags.MODAL)
 
