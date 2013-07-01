@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -59,7 +58,6 @@ msgid "Create recording"
 msgstr "Créer un enregistrement"
 
 #: ../src/isr/__init__.py:144
-#, fuzzy
 msgid "Create a new recording"
 msgstr "Créer un nouvel enregistrement"
 
@@ -80,7 +78,6 @@ msgid "Delete selected sessions"
 msgstr "Supprimer les sessions sélectionnées"
 
 #: ../src/isr/__init__.py:168
-#, fuzzy
 msgid "Recording name"
 msgstr "Nom de l'enregistrement"
 
@@ -123,7 +120,6 @@ msgid "Required gstreamer element missing"
 msgstr "Élement Gstreamer obligatoire manquant"
 
 #: ../src/isr/__init__.py:319
-#, fuzzy
 msgid "Open Project"
 msgstr "Ouvrir un projet"
 
@@ -132,7 +128,6 @@ msgid "Insight recorder projects"
 msgstr "Projets"
 
 #: ../src/isr/__init__.py:362
-#, fuzzy
 msgid "Project: "
 msgstr "Projet: "
 
@@ -165,13 +160,11 @@ msgid "Cancel"
 msgstr "Annuler"
 
 #: ../src/isr/isrNewRecording.py:60
-#, fuzzy
 msgid "Start recording"
 msgstr "Démarrer l'enregistrement"
 
 #. UI Elements for create recording dialog
 #: ../src/isr/isrNewRecording.py:63
-#, fuzzy
 msgid "Recording name:"
 msgstr "Nom de l'enregistrement:"
 

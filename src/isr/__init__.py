@@ -50,9 +50,9 @@ import isrDefs
 DOMAIN="insight-recorder"
 
 locale.bind_textdomain_codeset (DOMAIN, "UTF-8")
+gettext.install (DOMAIN)
 gettext.bindtextdomain (DOMAIN, isrDefs.PREFIX + '/share/locale')
 gettext.textdomain (DOMAIN)
-gettext.install (DOMAIN)
 from gettext import gettext as _
 
 import isrWebcamRecord
