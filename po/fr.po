@@ -14,173 +14,184 @@ msgstr ""
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ../src/isr/__init__.py:26
 msgid "Err: Gtk3 introspection not found try installing gir-gtk-3.0 or similar"
-msgstr ""
+msgstr "Err: Gtk3 introspection pas trouvé essayez d'installer gir-gtk-3.0 ou similaire"
 
 #: ../src/isr/__init__.py:36
 msgid "Err: Python gst not found try installing python-gst or similar"
-msgstr ""
+msgstr "Err: Python gst pas trouvé essayez d'installer python-gst ou similaire"
 
 #: ../src/isr/__init__.py:90
 msgid "Recording in progress"
-msgstr ""
+msgstr "Enregistrement en cours"
 
 #: ../src/isr/__init__.py:114 ../src/isr/__init__.py:345
 msgid "New project"
-msgstr ""
+msgstr "Nouveau projet"
 
 #: ../src/isr/__init__.py:115
 msgid "Create a new project"
-msgstr ""
+msgstr "Créer un nouveau projet"
 
 #: ../src/isr/__init__.py:119
 msgid "Open project"
-msgstr ""
+msgstr "Ouvrir un projet"
 
 #: ../src/isr/__init__.py:121
 msgid "Open an existing project"
-msgstr ""
+msgstr "Ouvrir un projet existant"
 
 #: ../src/isr/__init__.py:128 ../src/isr/isrIndicator.py:48
 msgid "Stop recording"
-msgstr ""
+msgstr "Arrêter l'enregistrement"
 
 #: ../src/isr/__init__.py:141
 msgid "No project open"
-msgstr ""
+msgstr "Aucun projet ouvert"
 
 #: ../src/isr/__init__.py:143
+#, fuzzy
 msgid "Create recording"
-msgstr ""
+msgstr "Créer un enregistrement"
 
 #: ../src/isr/__init__.py:144
+#, fuzzy
 msgid "Create a new recording"
-msgstr ""
+msgstr "Créer un nouvel enregistrement"
 
 #: ../src/isr/__init__.py:148 ../src/isr/__init__.py:194
 msgid "Export"
-msgstr ""
+msgstr "Exporter"
 
 #: ../src/isr/__init__.py:149
 msgid "Encode selected sessions"
-msgstr ""
+msgstr "Encoder les sessions sélectionnées"
 
 #: ../src/isr/__init__.py:153
 msgid "Delete"
-msgstr ""
+msgstr "Supprimer"
 
 #: ../src/isr/__init__.py:154
 msgid "Delete selected sessions"
-msgstr ""
+msgstr "Supprimer les sessions sélectionnées"
 
 #: ../src/isr/__init__.py:168
+#, fuzzy
 msgid "Recording name"
-msgstr ""
+msgstr "Nom de l'enregistrement"
 
 #: ../src/isr/__init__.py:176
 msgid "Date"
-msgstr ""
+msgstr "Date"
 
 #: ../src/isr/__init__.py:181
 msgid "Duration"
-msgstr ""
+msgstr "Durée"
 
 #: ../src/isr/__init__.py:251
 msgid ""
 "Element vp8enc missing: this is normally found in package gstreamer-plugins-"
 "bad\n"
 msgstr ""
+"Élément vp8enc manquant: Veuillez installer gstreamer-plugins-bad\n"
 
 #: ../src/isr/__init__.py:254
 msgid ""
 "Element videomixer missing: this is normally found in package gstreamer-"
 "plugins-good\n"
 msgstr ""
+"Élément videomixer manquant: Veuillez installer gstreamer-plugins-good\n"
+
 
 #: ../src/isr/__init__.py:258
 msgid ""
 "Element videoscale missing: this is normally found in package gstreamer-"
 "plugins-base\n"
 msgstr ""
+"Élément videoscale manquant: Veuillez installer gstreamer-plugins-base\n"
 
 #: ../src/isr/__init__.py:262
 msgid "Element alsasrc missing: this is normally found in gstreamer-alsa\n"
-msgstr ""
+msgstr "Élément alsasrc manquant: Veuillez installer gstreamer-alsa\n"
 
 #: ../src/isr/__init__.py:269
 msgid "Required gstreamer element missing"
-msgstr ""
+msgstr "Élement Gstreamer obligatoire manquant"
 
 #: ../src/isr/__init__.py:319
+#, fuzzy
 msgid "Open Project"
-msgstr ""
+msgstr "Ouvrir un projet"
 
 #: ../src/isr/__init__.py:326
 msgid "Insight recorder projects"
-msgstr ""
+msgstr "Projets"
 
 #: ../src/isr/__init__.py:362
+#, fuzzy
 msgid "Project: "
-msgstr ""
+msgstr "Projet: "
 
 #: ../src/isr/__init__.py:381
 msgid "Encoding of "
-msgstr ""
+msgstr "Encodage de "
 
 #: ../src/isr/__init__.py:381
 msgid " done"
-msgstr ""
+msgstr " effectué"
 
 #: ../src/isr/__init__.py:452
 msgid "Move '"
-msgstr ""
+msgstr "Déplacer '"
 
 #: ../src/isr/__init__.py:452
 msgid "' to trash?"
-msgstr ""
+msgstr "' vers la corbeille"
 
 #: ../src/isr/__init__.py:454
 msgid "This operation cannot be undone."
-msgstr ""
+msgstr "Cette opération ne peut être annulée"
 
 #: ../src/isr/__init__.py:590
 msgid "Processing ..."
-msgstr ""
+msgstr "Traitement ..."
 
 #: ../src/isr/isrNewRecording.py:40
+#, fuzzy
 msgid "Create recoding"
-msgstr ""
+msgstr "Créer réencodage"
 
 #: ../src/isr/isrNewRecording.py:59
 msgid "Cancel"
-msgstr ""
+msgstr "Annuler"
 
 #: ../src/isr/isrNewRecording.py:60
+#, fuzzy
 msgid "Start recording"
-msgstr ""
+msgstr "Démarrer l'enregistrement"
 
 #. UI Elements for create recording dialog
 #: ../src/isr/isrNewRecording.py:63
+#, fuzzy
 msgid "Recording name:"
-msgstr ""
+msgstr "Nom de l'enregistrement:"
 
 #: ../src/isr/isrNewRecording.py:69
 msgid "Primary capture:"
-msgstr ""
+msgstr "Capture primaire"
 
 #: ../src/isr/isrNewRecording.py:93
 msgid "Secondary capture:"
-msgstr ""
+msgstr "Capture secondaire"
 
-#. TODO
 #: ../src/isr/isrNewRecording.py:114
 msgid "Audio level:"
-msgstr ""
+msgstr "Niveau audio:"
 
 #: ../src/isr/isrNewRecording.py:115
 msgid "Audio settings"
-msgstr ""
+msgstr "Paramètres audio"
