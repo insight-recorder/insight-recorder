@@ -37,7 +37,7 @@ class mode:
 class NewRecording (Gtk.Dialog):
     def __init__(self, mainWindow):
 
-        Gtk.Dialog.__init__ (self, "Create recoding",
+        Gtk.Dialog.__init__ (self, _("Create recoding"),
                              mainWindow,
                              Gtk.DialogFlags.MODAL)
 
@@ -56,17 +56,17 @@ class NewRecording (Gtk.Dialog):
         self.secondarySourceHeight = 0
         self.secondarySourceWidth = 0
 
-        self.add_button ("Cancel", Gtk.ResponseType.CANCEL)
-        self.add_button ("Start recording", Gtk.ResponseType.ACCEPT)
+        self.add_button (_("Cancel"), Gtk.ResponseType.CANCEL)
+        self.add_button (_("Start recording"), Gtk.ResponseType.ACCEPT)
 
         # UI Elements for create recording dialog
-        label = Gtk.Label (label="Recording name:", halign=Gtk.Align.START)
+        label = Gtk.Label (label=_("Recording name:"), halign=Gtk.Align.START)
         self.entry = Gtk.Entry ()
         self.primaryCombo = Gtk.ComboBoxText ()
         self.primaryCombo.connect ("changed", self.primary_capture_changed)
         self.primaryCombo.set_title ("Primary Combo")
         self.primaryCombo.append_text ("Screen")
-        primaryComboLabel = Gtk.Label ("Primary capture:")
+        primaryComboLabel = Gtk.Label (_("Primary capture:"))
 
         self.secondaryCombo = Gtk.ComboBoxText ()
         self.secondaryCombo.connect ("changed", self.secondary_capture_changed)
@@ -90,7 +90,7 @@ class NewRecording (Gtk.Dialog):
             self.primaryCombo.append_text (deviceName)
 
         self.secondaryCombo.append_text ("None");
-        secondaryComboLabel = Gtk.Label ("Secondary capture:")
+        secondaryComboLabel = Gtk.Label (_("Secondary capture:"))
 
         devicesBox = Gtk.HBox ()
         devicesBox.pack_start (primaryComboLabel, False, False, 3)
@@ -111,8 +111,8 @@ class NewRecording (Gtk.Dialog):
         self.playerWindow.set_size_request (600, 300)
 
         # TODO
-        audioLabel = Gtk.Label ("Audio level:")
-        audioButton = Gtk.Button (label="Audio settings")
+        audioLabel = Gtk.Label (_("Audio level:"))
+        audioButton = Gtk.Button (label=_("Audio settings"))
         audioButton.connect ("clicked", self.launch_audio_settings);
         self.audioLevel = isrVUMeter.VUMeter ()
         self.audioLevel.set_valign (Gtk.Align.CENTER)

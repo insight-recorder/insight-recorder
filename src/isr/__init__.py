@@ -23,7 +23,7 @@
 try:
     from gi.repository import Gtk
 except ImportError:
-    print ("Err: Gtk3 introspection not found try installing gir-gtk-3.0 or similar")
+    print (_("Err: Gtk3 introspection not found try installing gir-gtk-3.0 or similar"))
     exit ()
 
 # These are dependencies of Gtk so they should exist if Gtk does
@@ -33,7 +33,7 @@ from gi.repository import Gio
 try:
     import gst
 except ImportError:
-    print ("Err: Python gst not found try installing python-gst or similar")
+    print (_("Err: Python gst not found try installing python-gst or similar"))
     exit ()
 
 import time
@@ -42,6 +42,18 @@ from datetime import timedelta
 from datetime import datetime
 import sys
 import signal
+import gettext
+import os
+import locale
+import isrDefs
+
+DOMAIN="insight-recorder"
+
+locale.bind_textdomain_codeset (DOMAIN, "UTF-8")
+gettext.bindtextdomain (DOMAIN, isrDefs.PREFIX + '/share/locale')
+gettext.textdomain (DOMAIN)
+gettext.install (DOMAIN)
+from gettext import gettext as _
 
 import isrWebcamRecord
 import isrScreencastRecord
@@ -75,7 +87,7 @@ class isrMain:
         self.currentRecording = None
         self.isRecording = False
         self.stopRecordButton = None
-        self.recordingText = "Recording in progress"
+        self.recordingText = _("Recording in progress")
 
         self.check_gst_elements_available ()
 
@@ -99,21 +111,21 @@ class isrMain:
         menu.get_style_context ().add_class (Gtk.STYLE_CLASS_PRIMARY_TOOLBAR)
 
         fileNew = Gtk.ToolButton.new_from_stock ("gtk-new")
-        fileNew.set_label ("New project")
-        fileNew.set_tooltip_text ("Create a new project")
+        fileNew.set_label (_("New project"))
+        fileNew.set_tooltip_text (_("Create a new project"))
         fileNew.connect ("clicked", self.new_folder_chooser, self.mainWindow)
 
         fileOpen = Gtk.ToolButton.new_from_stock ("gtk-open")
-        fileOpen.set_label ("Open project")
+        fileOpen.set_label (_("Open project"))
         fileOpen.connect ("clicked", self.open_file_chooser, self.mainWindow)
-        fileOpen.set_tooltip_text ("Open an existing project")
+        fileOpen.set_tooltip_text (_("Open an existing project"))
 
         menu.insert (fileNew, 0)
         menu.insert (fileOpen, 1)
 
          #InfoBar
         self.recordingInfoBar = Gtk.InfoBar ()
-        self.stopRecordButton = self.recordingInfoBar.add_button ("Stop recording", Gtk.ResponseType.OK)
+        self.stopRecordButton = self.recordingInfoBar.add_button (_("Stop recording"), Gtk.ResponseType.OK)
         self.recordingInfoBar.set_message_type (Gtk.MessageType.INFO)
         self.recordingInfoBar.connect ("response", self.stop_record)
         recordingInfoBarArea = self.recordingInfoBar.get_content_area ()
@@ -126,20 +138,20 @@ class isrMain:
         self.eosSpinner.hide ()
 
         self.projectLabel = Gtk.Label (halign=Gtk.Align.START)
-        self.projectLabel.set_markup ("<span style='italic'>No project open</span>")
+        self.projectLabel.set_markup ("<span style='italic'>"+_("No project open")+"</span>")
 
-        self.recordButton = Gtk.Button (label="Create recording",
-                                        tooltip_text="Create a new recording",
+        self.recordButton = Gtk.Button (label=_("Create recording"),
+                                        tooltip_text=_("Create a new recording"),
                                         sensitive=False)
         self.recordButton.connect("clicked", self.new_record_button_clicked_cb)
 
-        self.encodeButton = Gtk.Button (label="Export",
-                                        tooltip_text="Encode selected sessions",
+        self.encodeButton = Gtk.Button (label=_("Export"),
+                                        tooltip_text=_("Encode selected sessions"),
                                         sensitive=False)
         self.encodeButton.connect("clicked", self.encode_button_clicked_cb)
 
-        self.recordingDeleteButton = Gtk.Button (label="Delete",
-                                            tooltip_text="Delete selected sessions",
+        self.recordingDeleteButton = Gtk.Button (label=_("Delete"),
+                                            tooltip_text=_("Delete selected sessions"),
                                             sensitive=False)
 
         self.recordingDeleteButton.connect("clicked", self.delete_button_clicked_cb)
@@ -153,7 +165,7 @@ class isrMain:
 
         # Column Recording Name
         recordingTitle = Gtk.CellRendererProgress (text_xalign=0)
-        col1 = Gtk.TreeViewColumn ("Recording name",
+        col1 = Gtk.TreeViewColumn (_("Recording name"),
                                    recordingTitle,
                                    text=m.TITLE,
                                    value=m.PROGRESS)
@@ -161,12 +173,12 @@ class isrMain:
 
         # Column Date
         recordingDate = Gtk.CellRendererText ()
-        col2 = Gtk.TreeViewColumn ("Date", recordingDate, text=m.DATE)
+        col2 = Gtk.TreeViewColumn (_("Date"), recordingDate, text=m.DATE)
         recordingsView.append_column (col2)
 
         # Column Duration
         recordingDuration = Gtk.CellRendererText (xalign=0)
-        col3 = Gtk.TreeViewColumn ("Duration", recordingDuration,
+        col3 = Gtk.TreeViewColumn (_("Duration"), recordingDuration,
                                    text=m.DURATION)
         recordingsView.append_column (col3)
         col3.set_cell_data_func(recordingDuration,
@@ -179,7 +191,8 @@ class isrMain:
         # Column for export
         recordingExport = Gtk.CellRendererToggle (xalign=0.5)
         recordingExport.connect ("toggled", self.export_toggled)
-        col4 = Gtk.TreeViewColumn ("Export", recordingExport, active=m.EXPORT)
+        col4 = Gtk.TreeViewColumn (_("Export"), recordingExport,
+                                   active=m.EXPORT)
         recordingsView.append_column (col4)
         col4.connect ("notify::x-offset", self.buttons_x_offset)
 
@@ -235,25 +248,25 @@ class isrMain:
 
         # gst-plugins-bad
         if (gst.element_factory_find ("vp8enc") == None):
-            message += "Element vp8enc missing: this is normally found in package gstreamer-plugins-bad\n"
+            message += _("Element vp8enc missing: this is normally found in package gstreamer-plugins-bad\n")
         # gst-plugins-good
         if (gst.element_factory_find ("videomixer") == None):
-            message += "Element videomixer missing: this is normally found in package gstreamer-plugins-good\n"
+            message += _("Element videomixer missing: this is normally found in package gstreamer-plugins-good\n")
 
         # gst-plugins-base
         if (gst.element_factory_find ("videoscale") == None):
-            message += "Element videoscale missing: this is normally found in package gstreamer-plugins-base\n"
+            message += _("Element videoscale missing: this is normally found in package gstreamer-plugins-base\n")
 
         # gst-alsa
         if (gst.element_factory_find ("alsasrc") == None):
-            message += "Element alsasrc missing: this is normally found in gstreamer-alsa\n"
+            message += _("Element alsasrc missing: this is normally found in gstreamer-alsa\n")
 
         if (message == ""):
             return
 
         dialog = Gtk.MessageDialog (self.mainWindow, 0, Gtk.MessageType.ERROR,
                                    Gtk.ButtonsType.CANCEL,
-                                    "Required gstreamer element missing")
+                                    _("Required gstreamer element missing"))
         dialog.format_secondary_text (message)
 
         dialog.run ()
@@ -303,14 +316,14 @@ class isrMain:
 
 
     def open_file_chooser (self, menuitem, window):
-        dialog = Gtk.FileChooserDialog ("Open File",
+        dialog = Gtk.FileChooserDialog (_("Open Project"),
                                         None,
                                         Gtk.FileChooserAction.OPEN,
                                         (Gtk.STOCK_CANCEL,
                                         Gtk.ResponseType.CANCEL,
                                         Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
         fileFilter = Gtk.FileFilter ()
-        fileFilter.set_name ("Insight recorder projects")
+        fileFilter.set_name (_("Insight recorder projects"))
         #old project file extension
         fileFilter.add_pattern ("*.dut")
         fileFilter.add_pattern ("*.isr")
@@ -329,7 +342,7 @@ class isrMain:
 
 
     def new_folder_chooser (self, menuitem, window):
-        dialog = Gtk.FileChooserDialog ("New project",
+        dialog = Gtk.FileChooserDialog (_("New project"),
                                         None,
                                         Gtk.FileChooserAction.CREATE_FOLDER,
                                         (Gtk.STOCK_CANCEL,
@@ -346,7 +359,7 @@ class isrMain:
             projectName = GLib.filename_display_basename (self.projectDir)
             self.projectConfig = isrProject.isrProject (self.projectDir+"/"+projectName+".isr", projectName)
 
-            self.projectLabel.set_text ("Project: "+projectName)
+            self.projectLabel.set_text (_("Project: ")+projectName)
             self.enable_buttons (True)
 
         dialog.destroy()
@@ -365,7 +378,7 @@ class isrMain:
         if percentDone == 100:
             name = self.listStore.get_value (encodeItem, m.TITLE)
             self.notification ("Insight recorder",
-                               "Encoding of "+name+" done")
+                               _("Encoding of ")+name+_(" done"))
             self.listStore.set_value (encodeItem, m.EXPORT, False)
             if (self.encodeQueue != None):
                 #Allow the system to settle down before starting next
@@ -436,9 +449,9 @@ class isrMain:
                 dialog = Gtk.MessageDialog(self.mainWindow,
                                            0, Gtk.MessageType.WARNING,
                                            Gtk.ButtonsType.OK_CANCEL,
-                                           "Move '"+recName+"' to trash?")
+                                           _("Move '")+recName+_("' to trash?"))
                 dialog.format_secondary_text(
-                    "This operation cannot be undone.")
+                    _("This operation cannot be undone."))
                 response = dialog.run()
                 if response == Gtk.ResponseType.OK:
                     shutil.move (self.projectDir+"/"+recDate, GLib.get_home_dir
@@ -574,7 +587,7 @@ class isrMain:
 
     def stop_record (self, *remains):
         self.stopRecordButton.hide ();
-        self.infoBarLabel.set_text ("Processing ...")
+        self.infoBarLabel.set_text (_("Processing ..."))
         self.eosSpinner.show ()
         self.eosSpinner.start ();
 
@@ -597,5 +610,6 @@ class isrMain:
         sys.exit (0)
 
 def main ():
+    print ("Insight Recorder version: " + isrDefs.VERSION)
     isrMain()
     Gtk.main()

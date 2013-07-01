@@ -45,7 +45,7 @@ class Indicator:
                                                     AppIndicator3.IndicatorCategory.APPLICATION_STATUS)
 
       menu = Gtk.Menu ()
-      self.stopRecord = Gtk.MenuItem ("Stop recording")
+      self.stopRecord = Gtk.MenuItem (_("Stop recording"))
       self.stopRecord.connect ("activate", isrMain.stop_record)
 
       menu.append (self.stopRecord)
