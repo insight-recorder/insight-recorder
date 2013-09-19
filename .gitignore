@@ -1,1 +1,16 @@
 *.pyc
+Makefile
+Makefile.in.in
+Makefile.in
+configure
+config.log
+config.status
+po/POTFILES
+*.gmo
+install-sh
+missing
+autom4te.cache/
+aclocal.m4
+src/isr/isrDefs.py
+data/insight-recorder.desktop
+data/insight-recorder.desktop.in
