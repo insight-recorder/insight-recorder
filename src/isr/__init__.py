@@ -317,7 +317,7 @@ class isrMain:
 
     def open_file_chooser (self, menuitem, window):
         dialog = Gtk.FileChooserDialog (_("Open Project"),
-                                        None,
+                                        window,
                                         Gtk.FileChooserAction.OPEN,
                                         (Gtk.STOCK_CANCEL,
                                         Gtk.ResponseType.CANCEL,
@@ -343,7 +343,7 @@ class isrMain:
 
     def new_folder_chooser (self, menuitem, window):
         dialog = Gtk.FileChooserDialog (_("New project"),
-                                        None,
+                                        window,
                                         Gtk.FileChooserAction.CREATE_FOLDER,
                                         (Gtk.STOCK_CANCEL,
                                         Gtk.ResponseType.CANCEL,
