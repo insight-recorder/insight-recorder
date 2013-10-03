@@ -57,11 +57,14 @@ from gettext import gettext as _
 
 import isrWebcamRecord
 import isrScreencastRecord
+import isrRecord
 import isrMux
 import isrNewRecording
 import isrProject
 import isrIndicator
 
+
+#TODO ADD Filename field remove pos{x.y}/progress/export
 class m:
     TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS, POSX, POSY = range (8)
 
@@ -287,7 +290,7 @@ class isrMain:
 
     def row_activated (self, tree, path, col):
         if self.listStore[path][m.PROGRESS] == 100:
-            uri = GLib.filename_to_uri (self.projectDir+"/"+self.listStore[path][m.DATE]+"/final.webm", None)
+            uri = GLib.filename_to_uri (self.projectDir+"/"+self.listStore[path][m.TITLE]+self.listStore[path][m.DATE]+".webm", None)
 
             Gio.AppInfo.launch_default_for_uri (uri, None)
 
@@ -327,7 +330,6 @@ class isrMain:
         #old project file extension
         fileFilter.add_pattern ("*.dut")
         fileFilter.add_pattern ("*.isr")
-        dialog.add_filter (fileFilter)
 
         response = dialog.run ()
 
@@ -454,8 +456,13 @@ class isrMain:
                     _("This operation cannot be undone."))
                 response = dialog.run()
                 if response == Gtk.ResponseType.OK:
-                    shutil.move (self.projectDir+"/"+recDate, GLib.get_home_dir
-                                 ()+"/.local/share/Trash/files/")
+                    try:
+                        shutil.move (self.projectDir+"/"+recName+recDate+".webm",
+                                     GLib.get_home_dir ()+"/.local/share/Trash/files/")
+                    except:
+                        dialog.destroy ()
+                        print ("Error deleting")
+                        break
                     # Remove moves the current iter and True if it has moved
                     # onto the next item false if not
                     dialog.destroy ()
@@ -470,6 +477,29 @@ class isrMain:
 
             listItr = self.listStore.iter_next (listItr)
 
+    # If filename exists append i number on the end
+    def make_unique_file (self, filename):
+
+        stat = None
+        i = 0
+        append = ""
+
+        # Give up after 99999 tries to find a unique file
+        while (i < 99999):
+            stat = None
+            try:
+                stat = os.stat (filename+append)
+                i += 1
+            except OSError:
+                # "file not found"
+                break
+
+        if (stat):
+            append = str (i)
+
+        filename += append
+
+        return filename
 
     def new_record_setup_done (self, dialog, response):
 
@@ -480,8 +510,11 @@ class isrMain:
 
         dateStamp = datetime.today().strftime ("%d-%m-%H%M%S")
         currentRecording = self.currentRecording
-        # Create a dir for this recording
-        recordingDir = self.create_new_dir (dateStamp)
+
+        finalFile = GLib.build_filenamev ([self.projectDir,
+                                           currentRecording.recordingTitle+dateStamp+".webm"])
+
+        finalFile = self.make_unique_file (finalFile)
 
         self.listItr = self.listStore.append ([currentRecording.recordingTitle,
                                                dateStamp,
@@ -489,77 +522,87 @@ class isrMain:
                                                False, False, 0,
                                                currentRecording.posX,
                                                currentRecording.posY])
+
+
         self.mainWindow.iconify ()
         self.icon.set_visible (True)
 
         #if we only has one video source call it final
-        finalFile = recordingDir+"/final.webm"
-        primaryFile = recordingDir+"/primary-isr.webm"
-        secondaryFile = recordingDir+"/secondary-isr.webm"
+      #  finalFile = recordingDir+"/final.webm"
+       # primaryFile = recordingDir+"/primary-isr.webm"
+        #secondaryFile = recordingDir+"/secondary-isr.webm"
+
+
+        self.primary = isrRecord.Record (finalFile,
+                                         currentRecording.player,
+                                         self.record_stopped_cb)
+
+
+
 
         #shorten the var names :/
-        primarySource = currentRecording.primarySource
-        secondarySource = currentRecording.secondarySource
-        mode = isrNewRecording.mode
-        secondaryWidth = currentRecording.secondarySourceWidth
-        secondaryHeight = currentRecording.secondarySourceHeight
-        primaryWidth = currentRecording.primarySourceWidth
-        primaryHeight = currentRecording.primarySourceHeight
+        #primarySource = currentRecording.primarySource
+        #secondarySource = currentRecording.secondarySource
+        #mode = isrNewRecording.mode
+        #secondaryWidth = currentRecording.secondarySourceWidth
+        #secondaryHeight = currentRecording.secondarySourceHeight
+        #primaryWidth = currentRecording.primarySourceWidth
+        #primaryHeight = currentRecording.primarySourceHeight
 
 
-        if (currentRecording.mode == mode.WEBCAM):
-            self.primary = isrWebcamRecord.Webcam (finalFile,
-                                                   primarySource,
-                                                   secondaryWidth,
-                                                   secondaryHeight,
-                                                   False,
-                                                   self.record_stopped_cb)
+#        if (currentRecording.mode == mode.WEBCAM):
+ #           self.primary = isrWebcamRecord.Webcam (finalFile,
+  #                                                 primarySource,
+   #                                                secondaryWidth,
+    #                                               secondaryHeight,
+     #                                              False,
+      #                                             self.record_stopped_cb)
 
-        elif (currentRecording.mode == mode.SCREENCAST):
-            self.primary = isrScreencastRecord.Screencast (finalFile,
-                                                           self.record_stopped_cb)
+       # elif (currentRecording.mode == mode.SCREENCAST):
+         #   self.primary = isrScreencastRecord.Screencast (finalFile,
+        #                                                   self.record_stopped_cb)
 
-        elif (currentRecording.mode == mode.SCREENCAST_PIP):
-            self.primary = isrScreencastRecord.Screencast (primaryFile,
-                                                           self.record_stopped_cb)
+        #elif (currentRecording.mode == mode.SCREENCAST_PIP):
+         #   self.primary = isrScreencastRecord.Screencast (primaryFile,
+          #                                                 self.record_stopped_cb)
 
-            self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
-                                                      secondarySource,
-                                                      secondaryWidth,
-                                                      secondaryHeight,
-                                                      False,
-                                                      self.record_stopped_cb)
+           # self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
+            #                                          secondarySource,
+             #                                         secondaryWidth,
+              #                                        secondaryHeight,
+               #                                       False,
+                #                                      self.record_stopped_cb)
 
-        elif (currentRecording.mode == mode.TWOCAM):
-            self.primary = isrWebcamRecord.Webcam (primaryFile,
-                                                   primarySource,
-                                                   primaryWidth,
-                                                   primaryHeight,
-                                                   True,
-                                                   self.record_stopped_cb)
-
-            self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
-                                                      secondarySource,
-                                                      secondaryWidth,
-                                                      secondaryHeight,
-                                                      False,
-                                                      self.record_stopped_cb)
-
-        if (self.secondary is not None):
-            print ("Info: secondary source "+secondarySource)
-            self.secondary.record (1)
-            self.isRecording += 1
-
+#        elif (currentRecording.mode == mode.TWOCAM):
+ #           self.primary = isrWebcamRecord.Webcam (primaryFile,
+  #                                                 primarySource,
+   #                                                primaryWidth,
+    #                                               primaryHeight,
+     #                                              True,
+      #                                             self.record_stopped_cb)
+#
+ #           self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
+  #                                                    secondarySource,
+   #                                                   secondaryWidth,
+    #                                                  secondaryHeight,
+     #                                                 False,
+      #                                                self.record_stopped_cb)
+#
+ #       if (self.secondary is not None):
+  #          print ("Info: secondary source "+secondarySource)
+   #         self.secondary.record (1)
+    #        self.isRecording += 1
+#
         if (self.primary is not None):
-            print ("Info: primary source "+primarySource)
+           # print ("Info: primary source "+primarySource)
             self.primary.record (1)
             self.isRecording += 1
 
-        if (self.primary or self.secondary is not None):
-            self.stopRecordButton.show ()
-            self.recordingInfoBar.show ()
-            self.eosSpinner.hide ()
-            self.enable_buttons (False)
+#        if (self.primary or self.secondary is not None):
+#            self.stopRecordButton.show ()
+#            self.recordingInfoBar.show ()
+#            self.eosSpinner.hide ()
+#            self.enable_buttons (False)
 
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
