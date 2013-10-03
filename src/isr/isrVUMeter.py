@@ -1,7 +1,7 @@
 import gst
 
 from gi.repository import Gtk
-
+from gi.repository import GLib
 
 def clamp(x, min, max):
         if x < min:
@@ -35,12 +35,17 @@ class VUMeter (Gtk.DrawingArea):
 
     def pipe_message (self, bus, message):
 
-        level = message.get_structure ()
-        if level and level.get_name () == 'level':
+        message.structure.get_name ()
+        if message.structure.get_name () == 'level':
+            level = message.structure
+        else:
+            return
+
+        if level:
             totalRMS, biggestPeak, i = (0, 0, 0)
 
-            peakVals = level.get_value ('peak')
-            rmsVals = level.get_value ('rms')
+            peakVals = level['peak']
+            rmsVals = level['rms']
 
             channels = len (rmsVals)
             biggestPeak = peakVals[0];
