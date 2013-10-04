@@ -35,11 +35,12 @@ class VUMeter (Gtk.DrawingArea):
 
     def pipe_message (self, bus, message):
 
-        message.structure.get_name ()
-        if message.structure.get_name () == 'level':
-            level = message.structure
-        else:
+        if (message.structure is None):
             return
+        if (message.structure.get_name () != 'level'):
+            return
+
+        level = message.structure
 
         if level:
             totalRMS, biggestPeak, i = (0, 0, 0)
