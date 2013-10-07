@@ -2,7 +2,6 @@ TODO list
 
 
  - Play button in column?
- - disable create recording and export/delete buttons while encoding?
  - labels for toolbar icons
  - Make ximagesrc capture just the primary monitor - might avoid crash when showing preview
  - Streaming support
