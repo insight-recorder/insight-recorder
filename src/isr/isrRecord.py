@@ -69,7 +69,8 @@ class Record:
 
       filesink = gst.element_factory_make ("filesink", "sink")
       filesink.set_property ("location", fileOutputLocation)
- 
+
+#TODO
                                      #autoaudiosrc ! audio/x-raw-int,depth=16,channels=1,rate=44100 ! audioconvert ! queue ! vorbisenc ! .mux""")
 
 #      print (gstPipeDesciption+"ffmpegcolorspace ! vp8enc ! webmmux name=mux ! filesink location="+fileOutputLocation)
@@ -105,19 +106,18 @@ class Record:
       pipebus = self.pipe.get_bus ()
 
       pipebus.add_signal_watch ()
-      pipebus.connect ("message", self.pipe1_changed_cb)
+      pipebus.connect ("message", self.pipe_changed_cb)
 
-    def pipe1_changed_cb (self, bus, message):
+    def pipe_changed_cb (self, bus, message):
         if message.type == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
             print "Error: %s" % err, debug
             self.pipe.set_state (gst.STATE_NULL)
         if message.type == gst.MESSAGE_EOS:
             # The end position is approx the duration
-            self.duration, format = self.pipe.query_position (gst.FORMAT_TIME,
-                                                                 None)
             # Null/Stop
             self.pipe.set_state (gst.STATE_NULL)
+            print ("doing recording finished func")
             self.recording_finished_func ()
 
     def record (self, start):
@@ -127,7 +127,8 @@ class Record:
       else:
         print ("stop screencast record")
         self.pipe.send_event (gst.event_new_eos ())
-        self.pipe.set_state (gst.STATE_NULL)
+        self.duration, format = self.pipe.query_position (gst.FORMAT_TIME, None)
+#        self.pipe.set_state (gst.STATE_NULL)
 
     def get_duration (self):
         return self.duration

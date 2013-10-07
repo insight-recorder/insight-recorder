@@ -55,8 +55,6 @@ gettext.bindtextdomain (DOMAIN, isrDefs.PREFIX + '/share/locale')
 gettext.textdomain (DOMAIN)
 from gettext import gettext as _
 
-import isrWebcamRecord
-import isrScreencastRecord
 import isrRecord
 import isrMux
 import isrNewRecording
@@ -64,9 +62,9 @@ import isrProject
 import isrIndicator
 
 
-#TODO ADD Filename field remove pos{x.y}/progress/export
+#TODO use FILENAME - Can't remember what POS was for
 class m:
-    TITLE, DATE, DURATION, EXPORT, DELETE, PROGRESS, POSX, POSY = range (8)
+    TITLE, DATE, DURATION, FILENAME, DELETE, POSX, POSY = range (7)
 
 class isrMain:
     def __init__(self):
@@ -81,7 +79,6 @@ class isrMain:
         self.buttonBox = None
         self.screen = None
         self.projectConfig = None
-        self.encodeButton = None
         self.recordButton = None
         self.mainWindow = None
         self.updateTimer = None
@@ -126,7 +123,7 @@ class isrMain:
         menu.insert (fileNew, 0)
         menu.insert (fileOpen, 1)
 
-         #InfoBar
+        #InfoBar
         self.recordingInfoBar = Gtk.InfoBar ()
         self.stopRecordButton = self.recordingInfoBar.add_button (_("Stop recording"), Gtk.ResponseType.OK)
         self.recordingInfoBar.set_message_type (Gtk.MessageType.INFO)
@@ -148,10 +145,6 @@ class isrMain:
                                         sensitive=False)
         self.recordButton.connect("clicked", self.new_record_button_clicked_cb)
 
-        self.encodeButton = Gtk.Button (label=_("Export"),
-                                        tooltip_text=_("Encode selected sessions"),
-                                        sensitive=False)
-        self.encodeButton.connect("clicked", self.encode_button_clicked_cb)
 
         self.recordingDeleteButton = Gtk.Button (label=_("Delete"),
                                             tooltip_text=_("Delete selected sessions"),
@@ -167,11 +160,10 @@ class isrMain:
         recordingsView.connect ("row-activated", self.row_activated)
 
         # Column Recording Name
-        recordingTitle = Gtk.CellRendererProgress (text_xalign=0)
+        recordingTitle = Gtk.CellRendererText (xalign=0)
         col1 = Gtk.TreeViewColumn (_("Recording name"),
                                    recordingTitle,
-                                   text=m.TITLE,
-                                   value=m.PROGRESS)
+                                   text=m.TITLE)
         recordingsView.append_column (col1)
 
         # Column Date
@@ -190,25 +182,16 @@ class isrMain:
                                                   str(timedelta (seconds=model.get_value (iter, m.DURATION))))
 
                                )
-
-        # Column for export
-        recordingExport = Gtk.CellRendererToggle (xalign=0.5)
-        recordingExport.connect ("toggled", self.export_toggled)
-        col4 = Gtk.TreeViewColumn (_("Export"), recordingExport,
-                                   active=m.EXPORT)
-        recordingsView.append_column (col4)
-        col4.connect ("notify::x-offset", self.buttons_x_offset)
-
         # Column for delete
         recordingDelete = Gtk.CellRendererToggle (xalign=0.5)
         recordingDelete.connect ("toggled", self.delete_toggled)
         col5 = Gtk.TreeViewColumn ("Delete", recordingDelete, active=m.DELETE)
         recordingsView.append_column (col5)
+        col5.connect ("notify::x-offset", self.buttons_x_offset)
 
         # Box for new recording, export and delete buttons
         self.buttonBox = Gtk.HBox (spacing=5, homogeneous=False)
         self.buttonBox.pack_start (self.recordButton, False, False, 3)
-        self.buttonBox.pack_start (self.encodeButton, False, False, 3)
         self.buttonBox.pack_start (self.recordingDeleteButton, False, False, 3)
 
         # Box for rest of the UI which doesn't span the whole window
@@ -220,7 +203,6 @@ class isrMain:
         innerVbox.pack_start (self.projectLabel, False, False, 3)
         innerVbox.pack_start (recordingsView, False, False, 3)
         innerVbox.pack_start (self.buttonBox, False, False, 3)
-
 
         # Main container in window
         outterBoxLayout.pack_start (menu, False, False, 0)
@@ -289,22 +271,16 @@ class isrMain:
 
 
     def row_activated (self, tree, path, col):
-        if self.listStore[path][m.PROGRESS] == 100:
-            uri = GLib.filename_to_uri (self.projectDir+"/"+self.listStore[path][m.TITLE]+self.listStore[path][m.DATE]+".webm", None)
+        uri = GLib.filename_to_uri (self.projectDir+"/"+self.listStore[path][m.TITLE]+self.listStore[path][m.DATE]+".webm", None)
 
-            Gio.AppInfo.launch_default_for_uri (uri, None)
+        Gio.AppInfo.launch_default_for_uri (uri, None)
 
 
     def buttons_x_offset (self, col, cat):
         (a,b) = self.recordButton.get_preferred_width ()
         #margin from the edge of the record button minus the padding
-        self.encodeButton.set_margin_left (col.get_x_offset ()-a-10)
+        self.recordingDeleteButton.set_margin_left (col.get_x_offset ()-a-10)
 
-    def export_toggled (self, widget, path):
-        self.listStore[path][m.EXPORT] = not self.listStore[path][m.EXPORT]
-        #Don't allow export and delete to both be toggled
-        self.listStore[path][m.DELETE] = False
-        print ("export doggled")
 
     def delete_toggled (self, widget, path):
         self.listStore[path][m.DELETE] = not self.listStore[path][m.DELETE]
@@ -314,7 +290,6 @@ class isrMain:
 
     def enable_buttons (self, enable):
         self.recordButton.set_sensitive (enable)
-        self.encodeButton.set_sensitive (enable)
         self.recordingDeleteButton.set_sensitive (enable)
 
 
@@ -372,70 +347,11 @@ class isrMain:
 
         Gtk.main_quit()
 
-    def update_progress_bar (self, encodeItem):
-        percentDone = self.mux.pipe_report ()
-
-        self.listStore.set_value (encodeItem, m.PROGRESS, percentDone)
-
-        if percentDone == 100:
-            name = self.listStore.get_value (encodeItem, m.TITLE)
-            self.notification ("Insight recorder",
-                               _("Encoding of ")+name+_(" done"))
-            self.listStore.set_value (encodeItem, m.EXPORT, False)
-            if (self.encodeQueue != None):
-                #Allow the system to settle down before starting next
-                time.sleep (3)
-                self.run_encode_queue ()
-            return False
-
-        return True
-
     def create_new_dir (self, timeStamp):
         recordingDir = self.projectDir
         recordingDir += "/"+timeStamp+"/"
         GLib.mkdir_with_parents (recordingDir, 0755)
         return recordingDir
-
-    # When the current item reaches 100% encoded it calls this again to see if
-    # there are anymore to encode
-    def run_encode_queue (self):
-        if len (self.encodeQueue) > 0:
-            encodeItem = self.encodeQueue.pop ()
-        else:
-            return
-
-        print ("Info: run encode queue")
-        #If we've already encoded this item skip it
-        if (self.listStore.get_value (encodeItem, m.PROGRESS) == 100):
-            return
-
-        recordingDir = self.projectDir+"/"+self.listStore.get_value (encodeItem, m.DATE)
-        posX = self.listStore.get_value (encodeItem, m.POSX)
-        posY = self.listStore.get_value (encodeItem, m.POSY)
-
-        self.mux = isrMux.Muxer (recordingDir, posX, posY)
-
-        GLib.timeout_add (500, self.update_progress_bar, encodeItem)
-        print ("Info: run muxer")
-        self.mux.record (1)
-
-    def encode_button_clicked_cb (self, button):
-
-        listItr = self.listStore.get_iter_first ()
-
-        while (listItr != None):
-
-            if (self.listStore.get_value (listItr, m.EXPORT) == True):
-                #Add item to queue
-                print ("Info: Add " + self.listStore.get_value (listItr,
-                                                          m.TITLE) + " to enqueue")
-                self.encodeQueue.append (listItr)
-
-            listItr = self.listStore.iter_next (listItr)
-
-        if (self.encodeQueue != None):
-            self.run_encode_queue ()
-
 
     def delete_button_clicked_cb (self, button):
 
@@ -508,7 +424,7 @@ class isrMain:
         if (response != Gtk.ResponseType.ACCEPT):
             return
 
-        dateStamp = datetime.today().strftime ("%d-%m-%H%M%S")
+        dateStamp = datetime.today().strftime ("%d-%m-at-%Hh%Mm")
         currentRecording = self.currentRecording
 
         finalFile = GLib.build_filenamev ([self.projectDir,
@@ -527,82 +443,17 @@ class isrMain:
         self.mainWindow.iconify ()
         self.icon.set_visible (True)
 
-        #if we only has one video source call it final
-      #  finalFile = recordingDir+"/final.webm"
-       # primaryFile = recordingDir+"/primary-isr.webm"
-        #secondaryFile = recordingDir+"/secondary-isr.webm"
-
-
         self.primary = isrRecord.Record (finalFile,
                                          currentRecording.player,
                                          self.record_stopped_cb)
 
-
-
-
-        #shorten the var names :/
-        #primarySource = currentRecording.primarySource
-        #secondarySource = currentRecording.secondarySource
-        #mode = isrNewRecording.mode
-        #secondaryWidth = currentRecording.secondarySourceWidth
-        #secondaryHeight = currentRecording.secondarySourceHeight
-        #primaryWidth = currentRecording.primarySourceWidth
-        #primaryHeight = currentRecording.primarySourceHeight
-
-
-#        if (currentRecording.mode == mode.WEBCAM):
- #           self.primary = isrWebcamRecord.Webcam (finalFile,
-  #                                                 primarySource,
-   #                                                secondaryWidth,
-    #                                               secondaryHeight,
-     #                                              False,
-      #                                             self.record_stopped_cb)
-
-       # elif (currentRecording.mode == mode.SCREENCAST):
-         #   self.primary = isrScreencastRecord.Screencast (finalFile,
-        #                                                   self.record_stopped_cb)
-
-        #elif (currentRecording.mode == mode.SCREENCAST_PIP):
-         #   self.primary = isrScreencastRecord.Screencast (primaryFile,
-          #                                                 self.record_stopped_cb)
-
-           # self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
-            #                                          secondarySource,
-             #                                         secondaryWidth,
-              #                                        secondaryHeight,
-               #                                       False,
-                #                                      self.record_stopped_cb)
-
-#        elif (currentRecording.mode == mode.TWOCAM):
- #           self.primary = isrWebcamRecord.Webcam (primaryFile,
-  #                                                 primarySource,
-   #                                                primaryWidth,
-    #                                               primaryHeight,
-     #                                              True,
-      #                                             self.record_stopped_cb)
-#
- #           self.secondary = isrWebcamRecord.Webcam  (secondaryFile,
-  #                                                    secondarySource,
-   #                                                   secondaryWidth,
-    #                                                  secondaryHeight,
-     #                                                 False,
-      #                                                self.record_stopped_cb)
-#
- #       if (self.secondary is not None):
-  #          print ("Info: secondary source "+secondarySource)
-   #         self.secondary.record (1)
-    #        self.isRecording += 1
-#
         if (self.primary is not None):
-           # print ("Info: primary source "+primarySource)
             self.primary.record (1)
             self.isRecording += 1
-
-#        if (self.primary or self.secondary is not None):
-#            self.stopRecordButton.show ()
-#            self.recordingInfoBar.show ()
-#            self.eosSpinner.hide ()
-#            self.enable_buttons (False)
+            self.stopRecordButton.show ()
+            self.recordingInfoBar.show ()
+            self.eosSpinner.hide ()
+            self.enable_buttons (False)
 
     def new_record_button_clicked_cb (self, button):
          # Open dialog for recording settings
@@ -637,10 +488,6 @@ class isrMain:
         self.primary.record (0)
         if (self.secondary is not None):
             self.secondary.record (0)
-        else:
-            #We had no secondary so there is no need to do an encode
-            self.listStore.set_value (self.listItr, m.PROGRESS, int (100))
-
 
         #Show the window again
         self.mainWindow.deiconify ()

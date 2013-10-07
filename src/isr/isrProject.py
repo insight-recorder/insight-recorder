@@ -74,11 +74,6 @@ class isrProject:
                 duration = 0
 
             try:
-                progress = self.parser.getint (recording, "progress")
-            except ConfigParser.NoOptionError:
-                progress = 0
-
-            try:
                 xpos = self.parser.getint (recording, "xpos")
             except ConfigParser.NoOptionError:
                 xpos = 0
@@ -93,7 +88,6 @@ class isrProject:
                                duration,
                                False,
                                False,
-                               progress,
                                xpos, ypos])
 
             i += 1
@@ -130,8 +124,6 @@ class isrProject:
             self.parser.set (recording, "duration",
                              listStore.get_value (listItr, cols.DURATION))
 
-            self.parser.set (recording, "progress",
-                             listStore.get_value (listItr, cols.PROGRESS))
 
             self.parser.set (recording, "xpos",
                              listStore.get_value (listItr, cols.POSX))
