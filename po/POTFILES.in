@@ -2,3 +2,4 @@
 src/isr/__init__.py
 src/isr/isrIndicator.py
 src/isr/isrNewRecording.py
+src/isr/isrnewprojectdialog.ui
