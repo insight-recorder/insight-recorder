@@ -47,7 +47,7 @@ class NewRecording (Gtk.Dialog):
         self.recordingTitle = None
         self.mode = None
         self.audioLevel = None
-        self.gstPipeDescription = None
+        self.opacityScale = None
 
         self.secondarySource = None
         self.primarySource = "Screen"
@@ -56,6 +56,7 @@ class NewRecording (Gtk.Dialog):
         self.primarySourceWidth = 0
         self.secondarySourceHeight = 0
         self.secondarySourceWidth = 0
+
 
         self.add_button (_("Cancel"), Gtk.ResponseType.CANCEL)
         self.add_button (_("Start recording"), Gtk.ResponseType.ACCEPT)
@@ -111,30 +112,61 @@ class NewRecording (Gtk.Dialog):
         self.playerWindow.set_double_buffered (False)
         self.playerWindow.set_size_request (600, 300)
 
-        # TODO
-        audioLabel = Gtk.Label (_("Audio level:"))
-        audioButton = Gtk.Button (label=_("Audio settings"))
-        audioButton.connect ("clicked", self.launch_audio_settings);
-        self.audioLevel = isrVUMeter.VUMeter ()
-        self.audioLevel.set_valign (Gtk.Align.CENTER)
-
-        audioBox = Gtk.HBox ()
-        audioBox.pack_start (audioLabel, False, False, 3)
-        audioBox.pack_start (self.audioLevel, False, True, 3)
-        audioBox.pack_end (audioButton, False, True, 3)
-
-        recordingNameBox = Gtk.HBox ()
+        recordingNameBox = Gtk.VBox ()
         recordingNameBox.set_spacing (8)
         recordingNameBox.pack_start (label, False, False, 0)
-        recordingNameBox.pack_start (self.entry, True, True, 0)
+        recordingNameBox.pack_start (self.entry, False, False, 0)
+
+        opacityScaleLabel = Gtk.Label (_("Opacity for secondary capture:"))
+        opacityScaleLabel.set_halign (Gtk.Align.START)
+        self.opacityScale = Gtk.HScale ()
+        self.opacityScale.set_range (0.2, 1.0)
+        self.opacityScale.set_value (1.0)
+        self.opacityScale.set_inverted (True)
+        self.opacityScale.set_size_request (270, -1)
+        self.opacityScale.set_draw_value (False)
+        self.opacityScale.set_halign (Gtk.Align.START)
+        self.opacityScale.set_valign (Gtk.Align.CENTER)
+        self.opacityScale.connect ("value-changed",
+                                   self.alpha_adjust_changed)
+
+        audioLabel = Gtk.Label (_("Audio level:"))
+        audioLabel.set_halign (Gtk.Align.START)
+        audioButton = Gtk.ToolButton ()
+        audioButton.set_tooltip_text ( _("Audio settings"))
+        audioButton.set_icon_name ("audio-input-microphone")
+        audioButton.connect ("clicked", self.launch_audio_settings)
+        audioButton.set_halign (Gtk.Align.END)
+        audioButton.set_valign (Gtk.Align.CENTER)
+
+        self.audioLevel = isrVUMeter.VUMeter ()
+        self.audioLevel.set_valign (Gtk.Align.CENTER)
+        self.audioLevel.set_halign (Gtk.Align.START)
+
+        # This is so readable!
+        # attach (widget, left, top, width span, height span)
+        settingsGrid = Gtk.Grid ()
+        settingsGrid.set_column_spacing (3)
+        settingsGrid.attach (opacityScaleLabel, 0, 0, 1, 1)
+        settingsGrid.attach (self.opacityScale, 0 , 1, 1 ,1)
+        settingsGrid.attach (audioLabel, 1, 0 , 1, 1)
+        settingsGrid.attach (self.audioLevel, 1, 1 , 1, 1)
+        settingsGrid.attach (audioButton, 2, 1 , 1, 1)
 
         contentArea = self.get_content_area ()
-        contentArea.set_spacing (8)
+        contentArea.set_spacing (4)
         contentArea.set_margin_top (8)
         contentArea.add (recordingNameBox)
         contentArea.add (devicesBox)
         contentArea.add (self.playerWindow)
-        contentArea.add (audioBox)
+        contentArea.add (settingsGrid)
+
+    def alpha_adjust_changed (self, adjustment):
+        if (self.player):
+            videoMixer = self.player.get_by_name ("mix")
+            if (videoMixer):
+                pad = videoMixer.get_static_pad ("sink_1")
+                pad.set_property ("alpha", adjustment.get_value ())
 
     def launch_audio_settings (self, data):
         GLib.spawn_command_line_async ("gnome-control-center sound")
@@ -176,8 +208,10 @@ class NewRecording (Gtk.Dialog):
 
     def secondary_capture_changed (self, combo):
         deviceName = combo.get_active_text ()
+        # reset opacity setting for new pipe
+        self.opacityScale.set_value (1.0)
 
-        if (deviceName == None):
+        if (deviceName == None or self.player == None):
             return
 
         self.sameSecondaryAlert.hide ()
@@ -185,7 +219,7 @@ class NewRecording (Gtk.Dialog):
         if (deviceName == "None"):
             self.secondarySource = None
             if (self.primarySource == "Screen"):
-                selfideo_preview_screencast_only ()
+                self.video_preview_screencast_only ()
             else:
                 self.video_preview_webcam_only ()
             return
@@ -235,7 +269,8 @@ class NewRecording (Gtk.Dialog):
 
     def primary_capture_changed (self, combo):
         deviceName = combo.get_active_text ()
-
+        # reset opacity setting for new pipe
+        self.opacityScale.set_value (1.0)
         self.samePrimaryAlert.hide ()
 
 
@@ -443,8 +478,6 @@ class NewRecording (Gtk.Dialog):
                         " video/x-raw-rgb,width=1024,height=768,pixel-aspect-ratio=1/1 ! "
                         "mix. ")
 
-
-
         bus = self.player.get_bus()
         bus.add_signal_watch()
         bus.enable_sync_message_emission()
@@ -488,16 +521,15 @@ class NewRecording (Gtk.Dialog):
             cam1.set_locked_state (False)
 
         self.player.set_state (gst.STATE_NULL)
-        self.player.get_state (gst.STATE_NULL)
-#        self.player = None
         self.audioLevel.set_active (False)
 
     def open (self):
+        self.player = None
         self.show_all ()
         self.samePrimaryAlert.hide ()
         self.sameSecondaryAlert.hide ()
-        self.secondaryCombo.set_active (-1)
-        self.primaryCombo.set_active (-1)
+        self.secondaryCombo.set_active (0)
+        self.primaryCombo.set_active (0)
         self.audioLevel.set_active (True)
         self.entry.set_text ("")
         self.entry.grab_focus ()
