@@ -216,6 +216,20 @@ class isrMain:
         self.currentRecording.connect ("response",
                                        self.new_record_setup_done)
 
+
+        # New Project dialog
+        self.newProjectDialogUI = Gtk.Builder ()
+        ui_file = os.path.join(os.path.dirname(__file__),
+                               "isrnewprojectdialog.ui");
+        self.newProjectDialogUI.add_from_file (ui_file)
+
+        dialog = self.newProjectDialogUI.get_object ("dialog-window")
+        dialog.set_transient_for (self.mainWindow)
+        fileChooseButton = self.newProjectDialogUI.get_object ("filechooser-button")
+        fileChooseButton.set_current_folder (GLib.get_user_special_dir (GLib.UserDirectory.DIRECTORY_VIDEOS))
+        self.newProjectDialogUI.get_object ("create-button").connect ("clicked",self.new_project_dialog_create)
+        self.newProjectDialogUI.get_object ("cancel-button").connect ("clicked", lambda button: dialog.hide())
+
         #argv always contains at least the execuratable as the first item
         if (len (sys.argv) > 1):
             #Rudimentary check to see if this is a file we want to open
@@ -314,39 +328,29 @@ class isrMain:
 
 
     def new_folder_chooser (self, menuitem, window):
-        dialog = Gtk.FileChooserDialog (_("New project"),
-                                        window,
-                                        Gtk.FileChooserAction.CREATE_FOLDER,
-                                        (Gtk.STOCK_CANCEL,
-                                        Gtk.ResponseType.CANCEL,
-                                        Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
+        dialog = self.newProjectDialogUI.get_object ("dialog-window")
+        dialog.show ()
 
-        dialog.set_do_overwrite_confirmation (True)
+    def new_project_dialog_create (self, button):
+        filechooser = self.newProjectDialogUI.get_object ("filechooser-button")
+        projectNameEntry = self.newProjectDialogUI.get_object ("project-name")
 
-        response = dialog.run ()
+        self.listStore.clear ()
+        projectName = projectNameEntry.get_text ()
+        self.projectDir = filechooser.get_filename ()+"/"+projectName
+        GLib.mkdir_with_parents (self.projectDir, 0755)
+        self.projectConfig = isrProject.isrProject (self.projectDir+"/"+projectName+".isr", projectName)
 
-        if response == Gtk.ResponseType.OK:
-            self.listStore.clear ()
-            self.projectDir = dialog.get_filename ()
-            projectName = GLib.filename_display_basename (self.projectDir)
-            self.projectConfig = isrProject.isrProject (self.projectDir+"/"+projectName+".isr", projectName)
+        self.projectLabel.set_text (_("Project: ")+projectName)
+        self.enable_buttons (True)
 
-            self.projectLabel.set_text (_("Project: ")+projectName)
-            self.enable_buttons (True)
-
-        dialog.destroy()
+        self.newProjectDialogUI.get_object ("dialog-window").hide ()
 
     def on_mainWindow_destroy(self, widget):
         if self.projectConfig != None:
             self.projectConfig.dump (self, m)
 
         Gtk.main_quit()
-
-    def create_new_dir (self, timeStamp):
-        recordingDir = self.projectDir
-        recordingDir += "/"+timeStamp+"/"
-        GLib.mkdir_with_parents (recordingDir, 0755)
-        return recordingDir
 
     def delete_button_clicked_cb (self, button):
 
