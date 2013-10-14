@@ -28,25 +28,27 @@ class isrProject:
     def __init__ (self, projectFile, projectName):
         self.projectFile = projectFile
         self.projectName = projectName
-        self.parser = ConfigParser.RawConfigParser ()
-        out = self.parser.read (projectFile)
-        self.isNewFile = len (out)
 
     def populate (self, isrMain, cols):
+
+        parser = ConfigParser.RawConfigParser ()
+        out = parser.read (self.projectFile)
+        isNewFile = len (out)
+
         listStore = isrMain.listStore
         i = 0
 
-        if self.isNewFile <= 0:
-            print ("Err: empty project!!")
+        if isNewFile <= 0:
+            print ("Err: empty project!!11")
             return
 
-        self.projectName = self.parser.get ("project", "name")
+        self.projectName = parser.get ("project", "name")
 
         #eeww
         isrMain.projectLabel.set_text ("Project: "+self.projectName)
 
         try:
-            isrMain.projectDir = self.parser.get ("project", "dir")
+            isrMain.projectDir = parser.get ("project", "dir")
         except ConfigParser.NoOptionError:
             print ("Err: project directory key/value not found in config")
             return
@@ -55,46 +57,28 @@ class isrProject:
 
         recording = "recording-"+str(i)
 
-        while (self.parser.has_section (recording) == True):
+        while (parser.has_section (recording) == True):
 
             try:
-                title = self.parser.get (recording, "title")
+                title = parser.get (recording, "title")
             except ConfigParser.NoOptionError:
                 title = "Unknown"
 
             try:
-                date = self.parser.get (recording, "date")
+                date = parser.get (recording, "date")
             except ConfigParser.NoOptionError:
                 print ("Err: project config does not contain date field/value")
                 return
 
             try:
-                duration = self.parser.getint (recording, "duration")
+                duration = parser.getint (recording, "duration")
             except ConfigParser.NoOptionError:
                 duration = 0
-
-            try:
-                progress = self.parser.getint (recording, "progress")
-            except ConfigParser.NoOptionError:
-                progress = 0
-
-            try:
-                xpos = self.parser.getint (recording, "xpos")
-            except ConfigParser.NoOptionError:
-                xpos = 0
-
-            try:
-                ypos = self.parser.getint (recording, "ypos")
-            except ConfigParser.NoOptionError:
-                ypos = 0
 
             listStore.append ([title,
                                date,
                                duration,
-                               False,
-                               False,
-                               progress,
-                               xpos, ypos])
+                               False])
 
             i += 1
 
@@ -102,54 +86,41 @@ class isrProject:
 
 
     def dump (self, isrMain, cols):
+
+        parser = ConfigParser.RawConfigParser ()
+
         listStore = isrMain.listStore
 
         listItr = listStore.get_iter_first ()
         i = 0
 
-        if self.parser.has_section ("project") == False:
-            self.parser.add_section ("project")
-
-        self.parser.set ("project", "name", self.projectName)
-        self.parser.set ("project", "dir", isrMain.projectDir)
+        parser.add_section ("project")
+        parser.set ("project", "name", self.projectName)
+        parser.set ("project", "dir", isrMain.projectDir)
 
         while (listItr != None):
             recording = "recording-"+str (i)
 
             #e.g. [recording-0]
-            if self.parser.has_section (recording) == False:
-                self.parser.add_section (recording)
+            if parser.has_section (recording) == False:
+                parser.add_section (recording)
 
             # e.g. title=bob
-            self.parser.set (recording, "title",
+            parser.set (recording, "title",
                              listStore.get_value (listItr, cols.TITLE))
 
-            self.parser.set (recording, "date",
+            parser.set (recording, "date",
                              listStore.get_value (listItr, cols.DATE))
 
-            self.parser.set (recording, "duration",
+            parser.set (recording, "duration",
                              listStore.get_value (listItr, cols.DURATION))
 
-            self.parser.set (recording, "progress",
-                             listStore.get_value (listItr, cols.PROGRESS))
-
-            self.parser.set (recording, "xpos",
-                             listStore.get_value (listItr, cols.POSX))
-
-            self.parser.set (recording, "ypos",
-                             listStore.get_value (listItr, cols.POSY))
-
-
             listItr = listStore.iter_next (listItr)
-
             i += 1
 
 
-        with open (self.projectFile, "wb") as prjob:
-            self.parser.write (prjob)
+        with open (self.projectFile, "w") as prjob:
+            prjob.write ("")
+            parser.write (prjob)
 
         print ("Info: dump done for "+self.projectFile)
-
-    def remove_recording (self):
-        print ("TODO")
-
