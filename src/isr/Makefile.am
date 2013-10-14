@@ -7,6 +7,6 @@ insightrecorder_PYTHON = \
 			isrMux.py \
 			isrNewRecording.py \
 			isrProject.py \
-			isrScreencastRecord.py \
+			isrRecord.py \
 			isrVUMeter.py \
-			isrWebcamRecord.py
+			isrnewprojectdialog.ui
