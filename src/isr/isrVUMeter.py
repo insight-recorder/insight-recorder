@@ -18,7 +18,7 @@ class VUMeter (Gtk.DrawingArea):
         self.connect ("draw", self.draw);
         self.set_size_request (270, 14)
 
-        pipeline = "autoaudiosrc ! level message=true ! fakesink sync=true"
+        pipeline = "alsasrc ! level message=true ! fakesink sync=true"
 
         self.element = gst.parse_launch (pipeline)
 
