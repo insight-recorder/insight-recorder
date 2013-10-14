@@ -1,4 +1,4 @@
-AC_INIT(insight-recorder, 0.7)
+AC_INIT(insight-recorder, 0.8)
 AM_INIT_AUTOMAKE([1.11 no-dist-gzip dist-xz foreign])
 AM_SILENT_RULES([yes])
 AM_MAINTAINER_MODE([enable])
