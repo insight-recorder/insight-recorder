@@ -6,6 +6,7 @@ configure
 config.log
 config.status
 po/POTFILES
+po/*.pot
 *.gmo
 install-sh
 missing
