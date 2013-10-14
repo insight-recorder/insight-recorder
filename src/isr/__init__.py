@@ -419,7 +419,7 @@ class isrMain:
         if (response != Gtk.ResponseType.ACCEPT):
             return
 
-        dateStamp = datetime.today().strftime ("%d-%m-%H%M%S")
+        dateStamp = datetime.today().strftime ("%d-%m-at-%Hh%Mm")
         currentRecording = self.currentRecording
 
         finalFile = GLib.build_filenamev ([self.projectDir,
