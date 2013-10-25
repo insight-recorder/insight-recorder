@@ -64,6 +64,9 @@ class NewRecording (Gtk.Dialog):
         # UI Elements for create recording dialog
         label = Gtk.Label (label=_("Recording name:"), halign=Gtk.Align.START)
         self.entry = Gtk.Entry ()
+        self.entry.connect ("activate",
+                            lambda entry:
+                                self.response (Gtk.ResponseType.ACCEPT))
         self.primaryCombo = Gtk.ComboBoxText ()
         self.primaryCombo.connect ("changed", self.primary_capture_changed)
         self.primaryCombo.set_title ("Primary Combo")

@@ -23,7 +23,7 @@
                 <property name="label" translatable="yes">Cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
+                <property name="receives_default">False</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -36,6 +36,8 @@
                 <property name="label" translatable="yes">Create</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="has_default">True</property>
                 <property name="receives_default">True</property>
               </object>
               <packing>
@@ -77,6 +79,8 @@
               <object class="GtkEntry" id="project-name">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="has_default">True</property>
                 <property name="hexpand">True</property>
                 <property name="invisible_char">●</property>
                 <property name="invisible_char_set">True</property>
@@ -126,7 +130,7 @@
     </child>
     <action-widgets>
       <action-widget response="0">cancel-button</action-widget>
-      <action-widget response="0">create-button</action-widget>
+      <action-widget response="-5">create-button</action-widget>
     </action-widgets>
   </object>
 </interface>

@@ -225,10 +225,13 @@ class isrMain:
 
         dialog = self.newProjectDialogUI.get_object ("dialog-window")
         dialog.set_transient_for (self.mainWindow)
+
         fileChooseButton = self.newProjectDialogUI.get_object ("filechooser-button")
         fileChooseButton.set_current_folder (GLib.get_user_special_dir (GLib.UserDirectory.DIRECTORY_VIDEOS))
-        self.newProjectDialogUI.get_object ("create-button").connect ("clicked",self.new_project_dialog_create)
-        self.newProjectDialogUI.get_object ("cancel-button").connect ("clicked", lambda button: dialog.hide())
+        chooserEntry = self.newProjectDialogUI.get_object ("project-name")
+        chooserEntry.connect ("activate",
+                             lambda entry:
+                              dialog.response (Gtk.ResponseType.OK))
 
         #argv always contains at least the execuratable as the first item
         if (len (sys.argv) > 1):
@@ -317,7 +320,7 @@ class isrMain:
 
         response = dialog.run ()
 
-        if response == Gtk.ResponseType.OK:
+        if (response == Gtk.ResponseType.OK):
             projectFile = dialog.get_filename ()
             self.projectDir = GLib.path_get_dirname (projectFile)
             self.listStore.clear ()
@@ -329,22 +332,22 @@ class isrMain:
 
     def new_folder_chooser (self, menuitem, window):
         dialog = self.newProjectDialogUI.get_object ("dialog-window")
-        dialog.show ()
+        response = dialog.run ()
 
-    def new_project_dialog_create (self, button):
-        filechooser = self.newProjectDialogUI.get_object ("filechooser-button")
-        projectNameEntry = self.newProjectDialogUI.get_object ("project-name")
+        if (response == Gtk.ResponseType.OK):
+            filechooser = self.newProjectDialogUI.get_object ("filechooser-button")
+            projectNameEntry = self.newProjectDialogUI.get_object ("project-name")
+            self.listStore.clear ()
+            projectName = projectNameEntry.get_text ()
+            self.projectDir = filechooser.get_filename ()+"/"+projectName
+            GLib.mkdir_with_parents (self.projectDir, 0755)
+            self.projectConfig = isrProject.isrProject (self.projectDir+"/"+projectName+".isr", projectName)
 
-        self.listStore.clear ()
-        projectName = projectNameEntry.get_text ()
-        self.projectDir = filechooser.get_filename ()+"/"+projectName
-        GLib.mkdir_with_parents (self.projectDir, 0755)
-        self.projectConfig = isrProject.isrProject (self.projectDir+"/"+projectName+".isr", projectName)
+            self.projectLabel.set_text (_("Project: ")+projectName)
+            self.enable_buttons (True)
 
-        self.projectLabel.set_text (_("Project: ")+projectName)
-        self.enable_buttons (True)
+        dialog.hide ()
 
-        self.newProjectDialogUI.get_object ("dialog-window").hide ()
 
     def on_mainWindow_destroy(self, widget):
         if self.projectConfig != None:
@@ -370,7 +373,7 @@ class isrMain:
                 dialog.format_secondary_text(
                     _("This operation cannot be undone."))
                 response = dialog.run()
-                if response == Gtk.ResponseType.OK:
+                if (response == Gtk.ResponseType.OK):
                     try:
                         shutil.move (self.projectDir+"/"+recName+recDate+".webm",
                                      GLib.get_home_dir ()+"/.local/share/Trash/files/")
