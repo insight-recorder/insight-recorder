@@ -118,8 +118,6 @@ class VUMeter (Gtk.DrawingArea):
              cr.rectangle (0, 0, width, height)
              cr.stroke ()
 
-             self.clear = False
-
              return True
 
     def set_active (self, state):
