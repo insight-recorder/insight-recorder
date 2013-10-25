@@ -26,9 +26,7 @@ class VUMeter (Gtk.DrawingArea):
         pipebus.add_signal_watch ()
         pipebus.connect ("message", self.pipe_message)
 
-        self.clear = False
-
-        self.rms, self.maxPeak, self.peaks = (0, 0, 0)
+        self.peakTimer, self.rms, self.maxPeak, self.peaks = (0, 0, 0, 0)
 
     def reset_peak_value (self, unused):
         self.maxPeak = 0
@@ -72,7 +70,9 @@ class VUMeter (Gtk.DrawingArea):
             if (peak > self.maxPeak):
                 self.maxPeak = peak
 
-            GLib.timeout_add_seconds (2, self.reset_peak_value, None)
+            self.peakTimer = GLib.timeout_add_seconds (2,
+                                                       self.reset_peak_value,
+                                                       None)
 
             self.queue_draw ()
 
@@ -128,4 +128,6 @@ class VUMeter (Gtk.DrawingArea):
             self.element.set_state (gst.STATE_PLAYING)
         else:
             self.element.set_state (gst.STATE_NULL)
+            if (self.peakTimer > 0):
+                GLib.source_remove (self.peakTimer)
 
