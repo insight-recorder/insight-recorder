@@ -86,9 +86,9 @@ class VUMeter (Gtk.DrawingArea):
              cr.rectangle (0, 0, (self.peaks * width), height)
 
              #yellow and red
-             if (self.peaks > 0.7 and self.peaks < 1.0):
+             if (self.peaks >= 0.7 and self.peaks < 0.9):
                  cr.set_source_rgb (0.925, 0.882, 0.183)
-             elif (self.peaks > 0.9):
+             elif (self.peaks >= 0.9):
                  cr.set_source_rgb (1, 0, 0)
 
              cr.fill ()
@@ -99,9 +99,9 @@ class VUMeter (Gtk.DrawingArea):
              cr.rectangle (0, 0, (self.rms * width), height)
 
              #dark yellow and red
-             if (self.rms > 0.7 and self.peaks < 1.0):
+             if (self.rms >= 0.7 and self.rms < 0.9):
                  cr.set_source_rgb (0.694, 0.654, 0)
-             elif (self.rms > 0.9):
+             elif (self.rms >= 0.9):
                  cr.set_source_rgb (0.580, 0, 0)
 
              cr.fill ()
