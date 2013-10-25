@@ -537,6 +537,7 @@ class NewRecording (Gtk.Dialog):
         self.entry.set_text ("")
         self.entry.grab_focus ()
 
+        self.opacityScale.set_value (1.0)
         self.secondarySource = self.defaultSecondarySource
 
         if (self.defaultSecondarySource == None):
