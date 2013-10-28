@@ -6,3 +6,5 @@ TODO list
  - Make ximagesrc capture just the primary monitor - might avoid crash when showing preview
  - Streaming support
  - Input selection/pimary/secondary still akward
+ - Make muxing offline available again as an option
+ - Finish port to gst 1.0
