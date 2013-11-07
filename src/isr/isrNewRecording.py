@@ -493,6 +493,17 @@ class NewRecording (Gtk.Dialog):
         self.player.set_state(gst.STATE_PLAYING)
 
 
+    def open_error_dialog (self, msg):
+        dialog = Gtk.MessageDialog (self,
+                                    Gtk.DialogFlags.MODAL,
+                                    Gtk.MessageType.ERROR,
+                                    Gtk.ButtonsType.CLOSE,
+                                    msg)
+        dialog.run ()
+        dialog.destroy ()
+        return False
+
+
     def on_message(self, bus, message):
         t = message.type
         if t == gst.MESSAGE_EOS:
@@ -500,7 +511,13 @@ class NewRecording (Gtk.Dialog):
         elif t == gst.MESSAGE_ERROR:
             self.player.set_state(gst.STATE_NULL)
             err, debug = message.parse_error()
-            print "Err: %s" % err, debug
+
+            if (debug.find ("No space left on device") > 0):
+                msg = "Try using a different usb socket" + "\n" +  err.message + "\n" + debug
+                # HACK We can't block here with a dialog so do in idle
+                Gdk.threads_add_idle (0, self.open_error_dialog, msg)
+
+            print ("error: "+err.message+ "debug: "+ debug)
 
     def on_sync_message(self, bus, message):
         message_name = message.structure.get_name()
