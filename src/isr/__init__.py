@@ -53,7 +53,13 @@ locale.bind_textdomain_codeset (DOMAIN, "UTF-8")
 gettext.install (DOMAIN)
 gettext.bindtextdomain (DOMAIN, isrDefs.PREFIX + '/share/locale')
 gettext.textdomain (DOMAIN)
-from gettext import gettext as _
+try:
+    from gettext import getetext as _
+except ImportError:
+    print ("Gettext not found translatoins will not be available")
+    def _(string):
+        return string
+
 
 import isrRecord
 import isrMux
