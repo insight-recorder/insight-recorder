@@ -133,7 +133,8 @@ class isrMain:
         self.recordingInfoBar.set_message_type (Gtk.MessageType.INFO)
         self.recordingInfoBar.connect ("response", self.stop_record)
         recordingInfoBarArea = self.recordingInfoBar.get_content_area ()
-        self.infoBarLabel = Gtk.Label (self.recordingText)
+        self.infoBarLabel = Gtk.Label ();
+        self.infoBarLabel.set_text (self.recordingText)
         recordingInfoBarArea.pack_start (self.infoBarLabel,
                                          False, False, 3)
         self.eosSpinner = Gtk.Spinner ()

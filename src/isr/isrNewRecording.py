@@ -71,7 +71,8 @@ class NewRecording (Gtk.Dialog):
         self.primaryCombo.connect ("changed", self.primary_capture_changed)
         self.primaryCombo.set_title ("Primary Combo")
         self.primaryCombo.append_text ("Screen")
-        primaryComboLabel = Gtk.Label (_("Primary capture:"))
+        primaryComboLabel = Gtk.Label ()
+        primaryComboLabel.set_text (_("Primary capture:"))
 
         self.secondaryCombo = Gtk.ComboBoxText ()
         self.secondaryCombo.connect ("changed", self.secondary_capture_changed)
@@ -95,7 +96,8 @@ class NewRecording (Gtk.Dialog):
             self.primaryCombo.append_text (deviceName)
 
         self.secondaryCombo.append_text ("None");
-        secondaryComboLabel = Gtk.Label (_("Secondary capture:"))
+        secondaryComboLabel = Gtk.Label ()
+        secondaryComboLabel.set_text (_("Secondary capture:"))
 
         devicesBox = Gtk.HBox ()
         devicesBox.pack_start (primaryComboLabel, False, False, 3)
@@ -120,7 +122,8 @@ class NewRecording (Gtk.Dialog):
         recordingNameBox.pack_start (label, False, False, 0)
         recordingNameBox.pack_start (self.entry, False, False, 0)
 
-        opacityScaleLabel = Gtk.Label (_("Opacity for secondary capture:"))
+        opacityScaleLabel = Gtk.Label ()
+        opacityScaleLabel.set_text (_("Opacity for secondary capture:"))
         opacityScaleLabel.set_halign (Gtk.Align.START)
         self.opacityScale = Gtk.HScale ()
         self.opacityScale.set_range (0.2, 1.0)
@@ -133,7 +136,8 @@ class NewRecording (Gtk.Dialog):
         self.opacityScale.connect ("value-changed",
                                    self.alpha_adjust_changed)
 
-        audioLabel = Gtk.Label (_("Audio level:"))
+        audioLabel = Gtk.Label ()
+        audioLabel.set_label (_("Audio level:"))
         audioLabel.set_halign (Gtk.Align.START)
         audioButton = Gtk.ToolButton ()
         audioButton.set_tooltip_text ( _("Audio settings"))
