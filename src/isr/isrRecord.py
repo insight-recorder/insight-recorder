@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses>
 #
 
-import gst
+from gi.repository import Gst
 import multiprocessing
 
 
@@ -29,101 +29,100 @@ class Record:
                  inVideoPipe,
                  recording_finished_func):
 
-      cpus = 1
-      if (multiprocessing.cpu_count () > 1):
-          cpus = multiprocessing.cpu_count ()/2
-
+      # use all the cpu we can
+      cpus = multiprocessing.cpu_count()
       self.duration = 0
 
-      # The gstPipeDesciption we get here is straight from the preview so will
+      # The Gst.ipeDesciption we get here is straight from the preview so will
       # still contain a ximagesink as the sink - obviously we now want to out
       # put to a file so we remove the ximage sink and replace it with a
       # filesink.
       self.pipe = inVideoPipe
 
-
-      fullItr = self.pipe.elements ()
-
       element = None
-      oldSink = None
-      oldElementLinkedTo = None
+      targetBreakElement = None
 
       # Find the old sink element and note the previous element it was
       # linked to and then remove it from pipe.
-      for element in fullItr:
-          #print (element.get_name ())
-          if (element.get_name () == "sink"):
-           #   print ("\n\n FOUND ELEMENT \n\n")
-              oldSink = element
-              oldElementLinkedTo = fullItr.next ()
+      fullItr = self.pipe.iterate_elements ()
+      status, element = fullItr.next()
+
+      while status != Gst.IteratorResult.DONE:
+          print element
+          if (element.get_name () == "previewcaps"):
+              status, targetBreakElement = fullItr.next()
               break
 
+          status, element = fullItr.next()
+
+      oldCaps = self.pipe.get_child_by_name ("previewcaps")
+      oldSink = self.pipe.get_child_by_name ("sink")
+
+      self.pipe.remove (oldCaps)
       self.pipe.remove (oldSink)
 
-      colorspace = gst.element_factory_make ("ffmpegcolorspace", "colorspace")
+      colorspace = Gst.ElementFactory.make ("videoconvert", "colorspace")
 
-      encoder = gst.element_factory_make ("vp8enc", "encoder")
+      encoder = Gst.ElementFactory.make ("vp8enc", "encoder")
+      encoder.load_preset ("Profile Realtime")
+      # These are a copy of the properties set by the realtime profile
+      # If the preset is not found these are the essential properties to set
+      # Worst case senario we're unioning the presets.
       encoder.set_property ("threads", cpus)
-      encoder.set_property ("speed", 7)
+      encoder.set_property ("cpu-used", cpus)
+      encoder.set_property ("lag-in-frames", 0)
+      encoder.set_property ("deadline", 1)
 
-      #print ("threads: "+str(cpus))
+      muxer = Gst.ElementFactory.make ("webmmux", "muxer")
 
-      muxer = gst.element_factory_make ("webmmux", "muxer")
-
-      filesink = gst.element_factory_make ("filesink", "sink")
+      filesink = Gst.ElementFactory.make ("filesink", "sink")
       filesink.set_property ("location", fileOutputLocation)
 
       # Audio pipe
-      audiosrc = gst.element_factory_make ("alsasrc")
-      audiocaps = gst.element_factory_make ("capsfilter")
-      audiocaps.set_property ("caps", gst.caps_from_string ("audio/x-raw-int,depth=16,channels=1,rate=44100"))
-      audioconv = gst.element_factory_make ("audioconvert")
-      queue = gst.element_factory_make ("queue")
-      vorbisenc = gst.element_factory_make ("vorbisenc")
+      audiosrc = Gst.ElementFactory.make ("autoaudiosrc")
+      audioconv = Gst.ElementFactory.make ("audioconvert")
+      vorbisenc = Gst.ElementFactory.make ("vorbisenc")
 
-      # Add all the new elements to the bin
-      self.pipe.add_many (colorspace,
-                          encoder,
-                          muxer,
-                          filesink,
-                          audiosrc,
-                          audiocaps,
-                          audioconv,
-                          queue,
-                          vorbisenc)
+      # Add all the new elements playbin (where is add_many when you need it!)
+      self.pipe.add (colorspace)
+      self.pipe.add (encoder)
+      self.pipe.add (muxer)
+      self.pipe.add (filesink)
+      self.pipe.add (audiosrc)
+      self.pipe.add (audioconv)
+      self.pipe.add (vorbisenc)
       ret = False
 
       # Link the audio src through to the muxer
-      ret = gst.element_link_many (audiosrc,
-                                   audiocaps,
-                                   audioconv,
-                                   queue,
-                                   vorbisenc,
-                                   muxer)
+      ret = audiosrc.link (audioconv)
+      ret = audioconv.link(vorbisenc)
+      ret = vorbisenc.link (muxer)
 
       if (ret == False):
           print ("UNSUCCESSFUL LINK MANY in Audio pipe")
 
       ret = False
       # Link the new video sink pipe up
-      ret = gst.element_link_many (colorspace,
-                                   encoder,
-                                   muxer,
-                                   filesink)
+      ret = colorspace.link (encoder)
+      ret = encoder.link (muxer)
+      ret = muxer.link (filesink)
+
       if (ret == False):
           print ("UNSUCCESSFUL LINK MANY in Video pipe")
 
       #finally link the last part of the chain to the element that was
       #previously linked to the ximagesink.
       ret = False
-      ret = oldElementLinkedTo.link (colorspace)
+      ret = targetBreakElement.link (colorspace)
       if (ret == False):
           print ("UNSUCCESSFUL link of old element to colorspace")
-# debug
-#     fullItr = self.pipe.elements ()
-#     for elemet in fullItr:
-#         print ("--->")
-#         print (elemet.get_name ())
+
+      # useful for debug
+      #fullItr = self.pipe.iterate_sorted ()
+      #status, element = fullItr.next()
+      #while status != Gst.IteratorResult.DONE:
+      #    print element
+      #    status, element = fullItr.next()
 
       self.recording_finished_func = recording_finished_func
 
@@ -133,26 +132,25 @@ class Record:
       pipebus.connect ("message", self.pipe_changed_cb)
 
     def pipe_changed_cb (self, bus, message):
-        if message.type == gst.MESSAGE_ERROR:
+        if message.type == Gst.MessageType.ERROR:
             err, debug = message.parse_error()
             print "Error: %s" % err, debug
-            self.pipe.set_state (gst.STATE_NULL)
-        if message.type == gst.MESSAGE_EOS:
+            self.pipe.set_state (Gst.State.NULL)
+        if message.type == Gst.MessageType.EOS:
             # The end position is approx the duration
             # Null/Stop
-            self.pipe.set_state (gst.STATE_NULL)
+            self.pipe.set_state (Gst.State.NULL)
             # print ("doing recording finished func")
             self.recording_finished_func ()
 
     def record (self, start):
       if start == 1:
         print ("Start screencast record")
-        self.pipe.set_state (gst.STATE_PLAYING)
+        self.pipe.set_state (Gst.State.PLAYING)
       else:
         print ("stop screencast record")
-        self.pipe.send_event (gst.event_new_eos ())
-        self.duration, format = self.pipe.query_position (gst.FORMAT_TIME, None)
-     #   self.pipe.set_state (gst.STATE_NULL)
+        self.pipe.send_event (Gst.Event.new_eos ())
+        n, self.duration  = self.pipe.query_position (Gst.Format.TIME)
 
     def get_duration (self):
         return self.duration

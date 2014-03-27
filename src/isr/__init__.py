@@ -31,9 +31,9 @@ from gi.repository import GLib
 from gi.repository import Gio
 
 try:
-    import gst
+    from gi.repository import Gst
 except ImportError:
-    print (_("Err: Python gst not found try installing python-gst or similar"))
+    print (_("Err: Python Gst not found try installing gir-gstreamer or similar"))
     exit ()
 
 import time
@@ -93,6 +93,7 @@ class isrMain:
         self.stopRecordButton = None
         self.recordingText = _("Recording in progress")
 
+        Gst.init (None)
         self.check_gst_elements_available ()
 
         signal.signal(signal.SIGINT, self.close)
@@ -219,10 +220,10 @@ class isrMain:
         self.recordingInfoBar.hide ()
 
         self.currentRecording = isrNewRecording.NewRecording (self.mainWindow)
-
-        self.currentRecording.connect ("response",
-                                       self.new_record_setup_done)
-
+        print self.mainWindow
+        self.currentRecording.set_transient_for(self.mainWindow)
+        self.currentRecording.startRecordButton.connect ("clicked",
+                                                        self.new_record_setup_done)
 
         # New Project dialog
         self.newProjectDialogUI = Gtk.Builder ()
@@ -252,19 +253,19 @@ class isrMain:
     def check_gst_elements_available (self):
         message = ""
 
-        # gst-plugins-bad
-        if (gst.element_factory_find ("vp8enc") == None):
+        # Gst.plugins-bad
+        if (Gst.ElementFactory.find ("vp8enc") == None):
             message += _("Element vp8enc missing: this is normally found in package gstreamer-plugins-bad\n")
-        # gst-plugins-good
-        if (gst.element_factory_find ("videomixer") == None):
+        # Gst.plugins-good
+        if (Gst.ElementFactory.find ("videomixer") == None):
             message += _("Element videomixer missing: this is normally found in package gstreamer-plugins-good\n")
 
-        # gst-plugins-base
-        if (gst.element_factory_find ("videoscale") == None):
+        # Gst.plugins-base
+        if (Gst.ElementFactory.find ("videoscale") == None):
             message += _("Element videoscale missing: this is normally found in package gstreamer-plugins-base\n")
 
-        # gst-alsa
-        if (gst.element_factory_find ("alsasrc") == None):
+        # Gst.alsa
+        if (Gst.ElementFactory.find ("alsasrc") == None):
             message += _("Element alsasrc missing: this is normally found in gstreamer-alsa\n")
 
         if (message == ""):
@@ -426,12 +427,9 @@ class isrMain:
 
         return filename
 
-    def new_record_setup_done (self, dialog, response):
+    def new_record_setup_done (self, button):
 
         self.currentRecording.close ()
-
-        if (response != Gtk.ResponseType.ACCEPT):
-            return
 
         dateStamp = datetime.today().strftime ("%d-%m-at-%Hh%Mm")
         currentRecording = self.currentRecording
@@ -462,8 +460,7 @@ class isrMain:
             self.enable_buttons (False)
 
     def new_record_button_clicked_cb (self, button):
-         # Open dialog for recording settings
-         self.currentRecording.open ()
+        self.currentRecording.open ()
 
     def record_stopped_cb (self):
         self.isRecording -= 1

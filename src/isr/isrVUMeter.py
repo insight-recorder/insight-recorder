@@ -1,5 +1,4 @@
-import gst
-
+from gi.repository import Gst
 from gi.repository import Gtk
 from gi.repository import GLib
 
@@ -20,7 +19,7 @@ class VUMeter (Gtk.DrawingArea):
 
         pipeline = "alsasrc ! level message=true ! fakesink sync=true"
 
-        self.element = gst.parse_launch (pipeline)
+        self.element = Gst.parse_launch (pipeline)
 
         pipebus = self.element.get_bus ()
         pipebus.add_signal_watch ()
@@ -33,18 +32,18 @@ class VUMeter (Gtk.DrawingArea):
 
     def pipe_message (self, bus, message):
 
-        if (message.structure is None):
+        if (message.get_structure () is None):
             return
-        if (message.structure.get_name () != 'level'):
+        if (message.get_structure ().get_name () != 'level'):
             return
 
-        level = message.structure
+        level = message.get_structure ()
 
         if level:
             totalRMS, biggestPeak, i = (0, 0, 0)
 
-            peakVals = level['peak']
-            rmsVals = level['rms']
+            peakVals = level.get_value ('peak')
+            rmsVals = level.get_value ('rms')
 
             channels = len (rmsVals)
             biggestPeak = peakVals[0];
@@ -123,9 +122,9 @@ class VUMeter (Gtk.DrawingArea):
     def set_active (self, state):
 
         if (state):
-            self.element.set_state (gst.STATE_PLAYING)
+            self.element.set_state (Gst.State.PLAYING)
         else:
-            self.element.set_state (gst.STATE_NULL)
+            self.element.set_state (Gst.State.NULL)
             if (self.peakTimer > 0):
                 GLib.source_remove (self.peakTimer)
 
