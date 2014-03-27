@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses>
 #
 
-import gst
+from gi.repository import Gst
 import multiprocessing
 
 
@@ -35,7 +35,7 @@ class Record:
 
       self.duration = 0
 
-      # The gstPipeDesciption we get here is straight from the preview so will
+      # The Gst.ipeDesciption we get here is straight from the preview so will
       # still contain a ximagesink as the sink - obviously we now want to out
       # put to a file so we remove the ximage sink and replace it with a
       # filesink.
@@ -60,26 +60,26 @@ class Record:
 
       self.pipe.remove (oldSink)
 
-      colorspace = gst.element_factory_make ("ffmpegcolorspace", "colorspace")
+      colorspace = Gst.element_factory_make ("videoconvert", "colorspace")
 
-      encoder = gst.element_factory_make ("vp8enc", "encoder")
+      encoder = Gst.element_factory_make ("vp8enc", "encoder")
       encoder.set_property ("threads", cpus)
       encoder.set_property ("speed", 7)
 
       #print ("threads: "+str(cpus))
 
-      muxer = gst.element_factory_make ("webmmux", "muxer")
+      muxer = Gst.element_factory_make ("webmmux", "muxer")
 
-      filesink = gst.element_factory_make ("filesink", "sink")
+      filesink = Gst.element_factory_make ("filesink", "sink")
       filesink.set_property ("location", fileOutputLocation)
 
       # Audio pipe
-      audiosrc = gst.element_factory_make ("alsasrc")
-      audiocaps = gst.element_factory_make ("capsfilter")
-      audiocaps.set_property ("caps", gst.caps_from_string ("audio/x-raw-int,depth=16,channels=1,rate=44100"))
-      audioconv = gst.element_factory_make ("audioconvert")
-      queue = gst.element_factory_make ("queue")
-      vorbisenc = gst.element_factory_make ("vorbisenc")
+      audiosrc = Gst.element_factory_make ("alsasrc")
+      audiocaps = Gst.element_factory_make ("capsfilter")
+      audiocaps.set_property ("caps", Gst.caps_from_string ("audio/x-raw-int,depth=16,channels=1,rate=44100"))
+      audioconv = Gst.element_factory_make ("audioconvert")
+      queue = Gst.element_factory_make ("queue")
+      vorbisenc = Gst.element_factory_make ("vorbisenc")
 
       # Add all the new elements to the bin
       self.pipe.add_many (colorspace,
@@ -94,7 +94,7 @@ class Record:
       ret = False
 
       # Link the audio src through to the muxer
-      ret = gst.element_link_many (audiosrc,
+      ret = Gst.element_link_many (audiosrc,
                                    audiocaps,
                                    audioconv,
                                    queue,
@@ -106,7 +106,7 @@ class Record:
 
       ret = False
       # Link the new video sink pipe up
-      ret = gst.element_link_many (colorspace,
+      ret = Gst.element_link_many (colorspace,
                                    encoder,
                                    muxer,
                                    filesink)
@@ -133,26 +133,26 @@ class Record:
       pipebus.connect ("message", self.pipe_changed_cb)
 
     def pipe_changed_cb (self, bus, message):
-        if message.type == gst.MESSAGE_ERROR:
+        if message.type == Gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
             print "Error: %s" % err, debug
-            self.pipe.set_state (gst.STATE_NULL)
-        if message.type == gst.MESSAGE_EOS:
+            self.pipe.set_state (Gst.State.NULL)
+        if message.type == Gst.MESSAGE_EOS:
             # The end position is approx the duration
             # Null/Stop
-            self.pipe.set_state (gst.STATE_NULL)
+            self.pipe.set_state (Gst.State.NULL)
             # print ("doing recording finished func")
             self.recording_finished_func ()
 
     def record (self, start):
       if start == 1:
         print ("Start screencast record")
-        self.pipe.set_state (gst.STATE_PLAYING)
+        self.pipe.set_state (Gst.State.PLAYING)
       else:
         print ("stop screencast record")
-        self.pipe.send_event (gst.event_new_eos ())
-        self.duration, format = self.pipe.query_position (gst.FORMAT_TIME, None)
-     #   self.pipe.set_state (gst.STATE_NULL)
+        self.pipe.send_event (Gst.event_new_eos ())
+        self.duration, format = self.pipe.query_position (Gst.FORMAT_TIME, None)
+     #   self.pipe.set_state (Gst.State.NULL)
 
     def get_duration (self):
         return self.duration

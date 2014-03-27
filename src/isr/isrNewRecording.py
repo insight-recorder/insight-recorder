@@ -19,13 +19,14 @@
 # along with this program; if not, see <http://www.gnu.org/licenses>
 #
 
-import gst
 
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GdkX11
 from gi.repository import GUdev
 from gi.repository import GLib
+from gi.repository import Gst
+from gi.repository import GstVideo
 
 import isrVUMeter
 
@@ -246,7 +247,7 @@ class NewRecording (Gtk.Dialog):
                 return
 
 
-        self.player.set_state (gst.STATE_READY)
+        self.player.set_state (Gst.State.READY)
 
         # If we were in screencast mode then we need to get out of it
         # as we now have a secondary source to use
@@ -258,7 +259,7 @@ class NewRecording (Gtk.Dialog):
         if (self.mode == mode.TWOCAM):
             cam1 = self.player.get_by_name ("cam1")
             cam1.set_locked_state (False)
-            cam1.set_state (gst.STATE_NULL)
+            cam1.set_state (Gst.State.NULL)
             # Avoid both being set by locking the other source in a null state
             if (self.secondarySource == self.primarySource):
                 cam1.set_locked_state (True)
@@ -267,11 +268,11 @@ class NewRecording (Gtk.Dialog):
 
         cam2 = self.player.get_by_name ("cam2")
         cam2.set_locked_state (False)
-        cam2.set_state (gst.STATE_NULL)
+        cam2.set_state (Gst.State.NULL)
 
         cam2.set_property ("device", self.secondarySource)
 
-        self.player.set_state (gst.STATE_PLAYING)
+        self.player.set_state (Gst.State.PLAYING)
 
 
     def primary_capture_changed (self, combo):
@@ -290,7 +291,7 @@ class NewRecording (Gtk.Dialog):
             return
 
         self.primarySource = "/dev/"+deviceName
-        self.player.set_state (gst.STATE_READY)
+        self.player.set_state (Gst.State.READY)
 
         #our secondary source is none and we're not recording a screencast
         if (self.secondarySource == None and self.mode is not mode.WEBCAM):
@@ -304,12 +305,12 @@ class NewRecording (Gtk.Dialog):
 
         cam1 = self.player.get_by_name ("cam1")
         cam1.set_locked_state (False)
-        cam1.set_state (gst.STATE_NULL)
+        cam1.set_state (Gst.State.NULL)
 
         if (self.mode == mode.TWOCAM):
             cam2 = self.player.get_by_name ("cam2")
             cam2.set_locked_state (False)
-            cam2.set_state (gst.STATE_NULL)
+            cam2.set_state (Gst.State.NULL)
             # Avoid both being set by locking the other source in a null state
             if (self.secondarySource == self.primarySource):
                 cam2.set_locked_state (True)
@@ -318,7 +319,7 @@ class NewRecording (Gtk.Dialog):
 
         cam1.set_property ("device", self.primarySource)
 
-        self.player.set_state (gst.STATE_PLAYING)
+        self.player.set_state (Gst.State.PLAYING)
 
     def video_preview_screencast_only (self):
 
@@ -327,7 +328,7 @@ class NewRecording (Gtk.Dialog):
             return
 
         if (self.player):
-            self.player.set_state(gst.STATE_NULL)
+            self.player.set_state(Gst.State.NULL)
 
         self.mode = mode.SCREENCAST
 
@@ -340,7 +341,7 @@ class NewRecording (Gtk.Dialog):
         self.primarySource = "Screen"
         self.secondarySource = None
 
-        self.player = gst.parse_launch (" ximagesrc use-damage=false"
+        self.player = Gst.parse_launch (" ximagesrc use-damage=false"
                                         " show-pointer=true ! videoscale"
                                         " ! ximagesink "
                                         " sync=false name=\"sink\"")
@@ -355,7 +356,7 @@ class NewRecording (Gtk.Dialog):
 
         self.xid = self.playerWindow.get_window ().get_xid()
 
-        self.player.set_state(gst.STATE_PLAYING)
+        self.player.set_state(Gst.State.PLAYING)
 
     def video_preview_webcam_only (self):
 
@@ -364,17 +365,17 @@ class NewRecording (Gtk.Dialog):
             return
 
         if (self.player):
-            self.player.set_state(gst.STATE_NULL)
+            self.player.set_state(Gst.State.NULL)
 
         self.mode = mode.WEBCAM
 
         self.posY = 0
         self.posX = 0
 
-        self.player = gst.parse_launch ("v4l2src device="+self.primarySource+""
+        self.player = Gst.parse_launch ("v4l2src device="+self.primarySource+""
                                         " name=\"cam1\""
                                         " ! videoflip method=horizontal-flip"
-                                        " ! ffmpegcolorspace"
+                                        " ! videoconvert"
                                         " ! videoscale !"
                                         " ximagesink name=\"sink\"")
 
@@ -387,7 +388,7 @@ class NewRecording (Gtk.Dialog):
 
         self.xid = self.playerWindow.get_window ().get_xid()
 
-        self.player.set_state(gst.STATE_PLAYING)
+        self.player.set_state(Gst.State.PLAYING)
 
 
 
@@ -398,7 +399,7 @@ class NewRecording (Gtk.Dialog):
             return
 
         if (self.player):
-            self.player.set_state(gst.STATE_NULL)
+            self.player.set_state(Gst.State.NULL)
 
         self.mode = mode.SCREENCAST_PIP
 
@@ -417,24 +418,25 @@ class NewRecording (Gtk.Dialog):
         posXStr = str (self.posX)
 
 
-        self.player = gst.parse_launch ("v4l2src "
+        self.player = Gst.parse_launch ("v4l2src "
                                         " device=\""+self.secondarySource+"\""
                                         " name=\"cam2\" ! "
                                         " videoscale ! queue ! videoflip "
                                         " method=horizontal-flip ! "
-                                        " ffmpegcolorspace ! "
-                                        " video/x-raw-rgb,height=240,framerate=15/1"
+                                        " videoconvert ! "
+                                        " video/x-raw,height=240,framerate=15/1"
                                         " ! videomixer name=mix sink_0::xpos=0"
                                         " sink_0::ypos=0"
                                         " sink_1::xpos="+posXStr+""
                                         " sink_1::ypos="+posYStr+""
-                                        " ! videoscale !"
+                                        " ! videoscale "
+                                        " ! video/x-raw,width=\"600\",height=\"300\" !"
                                         " ximagesink name=\"sink\" "
-                                        " sync=false"
+                                        " sync=false force-aspect-ratio=true"
                                         " ximagesrc use-damage=false"
                                         " show-pointer=true  !"
                                         " videoscale !"
-                                        " video/x-raw-rgb,framerate=15/1 ! "
+                                        " video/x-raw,framerate=15/1 ! "
                                         " mix.")
 
         bus = self.player.get_bus()
@@ -446,7 +448,7 @@ class NewRecording (Gtk.Dialog):
 
         self.xid = self.playerWindow.get_window ().get_xid()
 
-        self.player.set_state(gst.STATE_PLAYING)
+        self.player.set_state(Gst.State.PLAYING)
 
     def video_preview_webcam_webcam (self):
 
@@ -457,7 +459,7 @@ class NewRecording (Gtk.Dialog):
         self.mode = mode.TWOCAM
 
         if (self.player):
-            self.player.set_state(gst.STATE_NULL)
+            self.player.set_state(Gst.State.NULL)
 
 
         self.primarySourceHeight = 768
@@ -468,10 +470,10 @@ class NewRecording (Gtk.Dialog):
         self.posY = 528
         self.posX = 704
 
-        self.player = gst.parse_launch ("v4l2src"
+        self.player = Gst.parse_launch ("v4l2src"
                                         " device="+self.secondarySource+" "
                                         " name=\"cam2\" ! queue !"
-                        "videoflip method=horizontal-flip ! ffmpegcolorspace !"
+                        "videoflip method=horizontal-flip ! videoconvert !"
                         "videoscale  add-borders=1 ! "
                         "video/x-raw-rgb,width=320,height=240,framerate=15/1,pixel-aspect-ratio=1/1  ! "
                         "videomixer name=mix sink_0::xpos=0 "
@@ -480,7 +482,7 @@ class NewRecording (Gtk.Dialog):
                         "videoscale ! ximagesink name=\"sink\" sync=false "
                         "v4l2src device="+self.primarySource+" name=\"cam1\" ! "
                         "queue ! videoflip method=horizontal-flip ! videoflip "
-                        " method=vertical-flip ! ffmpegcolorspace ! "
+                        " method=vertical-flip ! videoconvert ! "
                         " videoscale add-borders=1 ! "
                         " video/x-raw-rgb,width=1024,height=768,pixel-aspect-ratio=1/1 ! "
                         "mix. ")
@@ -494,7 +496,7 @@ class NewRecording (Gtk.Dialog):
 
         self.xid = self.playerWindow.get_window ().get_xid()
 
-        self.player.set_state(gst.STATE_PLAYING)
+        self.player.set_state(Gst.State.PLAYING)
 
 
     def open_error_dialog (self, msg):
@@ -510,10 +512,10 @@ class NewRecording (Gtk.Dialog):
 
     def on_message(self, bus, message):
         t = message.type
-        if t == gst.MESSAGE_EOS:
-            self.player.set_state(gst.STATE_NULL)
-        elif t == gst.MESSAGE_ERROR:
-            self.player.set_state(gst.STATE_NULL)
+        if t == Gst.MessageType.EOS:
+            self.player.set_state(Gst.State.NULL)
+        elif t == Gst.MessageType.ERROR:
+            self.player.set_state(Gst.State.NULL)
             err, debug = message.parse_error()
 
             if (debug.find ("No space left on device") > 0):
@@ -524,10 +526,11 @@ class NewRecording (Gtk.Dialog):
             print ("error: "+err.message+ "debug: "+ debug)
 
     def on_sync_message(self, bus, message):
-        message_name = message.structure.get_name()
-        if message_name == "prepare-xwindow-id":
-            message.src.set_property("force-aspect-ratio", True)
-            message.src.set_xwindow_id (self.xid)
+        message_name = message.get_structure ().get_name()
+        if message_name == "prepare-window-handle":
+            message.src.set_window_handle (self.xid)
+
+
 
     def close (self):
         self.recordingTitle = self.entry.get_text ()
@@ -544,7 +547,7 @@ class NewRecording (Gtk.Dialog):
         if (cam1 != None):
             cam1.set_locked_state (False)
 
-        self.player.set_state (gst.STATE_NULL)
+        self.player.set_state (Gst.State.NULL)
         self.audioLevel.set_active (False)
 
     def open (self):

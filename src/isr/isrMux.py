@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses>
 #
 
-import gst
+from gi.repository import Gst
 
 class Muxer:
     def __init__(self, projectDir, posX, posY):
@@ -83,7 +83,7 @@ class Muxer:
     def pipe1_changed_cb (self, bus, message):
       if message.type == gst.MESSAGE_EOS:
           print ("Info: Done first pass, starting second pass")
-          self.element2.set_state (gst.STATE_PLAYING)
+          self.element2.set_state (gst.State.PLAYING)
       if message.type == gst.MESSAGE_ERROR:
           err, debug = message.parse_error()
           print ("Err: isrMux pipe1: %s" % err, debug)
@@ -111,7 +111,7 @@ class Muxer:
     def record (self, start):
       if start == 1:
         print ("Start mux record")
-        self.element.set_state (gst.STATE_PLAYING)
+        self.element.set_state (gst.State.PLAYING)
 
         self.element.get_state (gst.CLOCK_TIME_NONE)
       else:
