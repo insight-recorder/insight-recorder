@@ -42,7 +42,7 @@ class Record:
       self.pipe = inVideoPipe
 
 
-      fullItr = self.pipe.elements ()
+      fullItr = self.pipe.iterate_elements ()
 
       element = None
       oldSink = None
@@ -50,66 +50,73 @@ class Record:
 
       # Find the old sink element and note the previous element it was
       # linked to and then remove it from pipe.
-      for element in fullItr:
+      #for element in fullItr:
+      status, element = fullItr.next()
+
+      while status != Gst.IteratorResult.DONE:
           #print (element.get_name ())
-          if (element.get_name () == "sink"):
+          print element
+          if (element.get_name () == "sink" or
+              element.get_name () == "tempcaps"):
            #   print ("\n\n FOUND ELEMENT \n\n")
               oldSink = element
-              oldElementLinkedTo = fullItr.next ()
+              status, oldElementLinkedTo = fullItr.next ()
               break
+          status, element = fullItr.next()
+
+      print oldElementLinkedTo
 
       self.pipe.remove (oldSink)
 
-      colorspace = Gst.element_factory_make ("videoconvert", "colorspace")
+      colorspace = Gst.ElementFactory.make ("videoconvert", "colorspace")
 
-      encoder = Gst.element_factory_make ("vp8enc", "encoder")
+      encoder = Gst.ElementFactory.make ("vp8enc", "encoder")
       encoder.set_property ("threads", cpus)
-      encoder.set_property ("speed", 7)
 
       #print ("threads: "+str(cpus))
 
-      muxer = Gst.element_factory_make ("webmmux", "muxer")
+      muxer = Gst.ElementFactory.make ("webmmux", "muxer")
 
-      filesink = Gst.element_factory_make ("filesink", "sink")
+      filesink = Gst.ElementFactory.make ("filesink", "sink")
       filesink.set_property ("location", fileOutputLocation)
 
       # Audio pipe
-      audiosrc = Gst.element_factory_make ("alsasrc")
-      audiocaps = Gst.element_factory_make ("capsfilter")
-      audiocaps.set_property ("caps", Gst.caps_from_string ("audio/x-raw-int,depth=16,channels=1,rate=44100"))
-      audioconv = Gst.element_factory_make ("audioconvert")
-      queue = Gst.element_factory_make ("queue")
-      vorbisenc = Gst.element_factory_make ("vorbisenc")
+      audiosrc = Gst.ElementFactory.make ("alsasrc")
+      audiocaps = Gst.ElementFactory.make ("capsfilter")
+      audiocaps.set_property ("caps", Gst.caps_from_string ("audio/x-raw,depth=16,channels=1,rate=44100"))
+      audioconv = Gst.ElementFactory.make ("audioconvert")
+      queue = Gst.ElementFactory.make ("queue")
+      vorbisenc = Gst.ElementFactory.make ("vorbisenc")
 
-      # Add all the new elements to the bin
-      self.pipe.add_many (colorspace,
-                          encoder,
-                          muxer,
-                          filesink,
-                          audiosrc,
-                          audiocaps,
-                          audioconv,
-                          queue,
-                          vorbisenc)
+      print self.pipe
+      # Add all the new elements playbin (where is add_many when you need it!)
+      self.pipe.add (colorspace)
+      self.pipe.add (encoder)
+      self.pipe.add (muxer)
+      self.pipe.add (filesink)
+      self.pipe.add (audiosrc)
+      self.pipe.add (audiocaps)
+      self.pipe.add (audioconv)
+      self.pipe.add (queue)
+      self.pipe.add (vorbisenc)
       ret = False
 
       # Link the audio src through to the muxer
-      ret = Gst.element_link_many (audiosrc,
-                                   audiocaps,
-                                   audioconv,
-                                   queue,
-                                   vorbisenc,
-                                   muxer)
+      ret = audiosrc.link (audiocaps)
+      ret = audiocaps.link (audioconv)
+      ret = audioconv.link (queue)
+      ret = queue.link (vorbisenc)
+      ret = vorbisenc.link (muxer)
 
       if (ret == False):
           print ("UNSUCCESSFUL LINK MANY in Audio pipe")
 
       ret = False
       # Link the new video sink pipe up
-      ret = Gst.element_link_many (colorspace,
-                                   encoder,
-                                   muxer,
-                                   filesink)
+      ret = colorspace.link (encoder)
+      ret = encoder.link (muxer)
+      ret = muxer.link (filesink)
+
       if (ret == False):
           print ("UNSUCCESSFUL LINK MANY in Video pipe")
 
@@ -133,11 +140,11 @@ class Record:
       pipebus.connect ("message", self.pipe_changed_cb)
 
     def pipe_changed_cb (self, bus, message):
-        if message.type == Gst.MESSAGE_ERROR:
+        if message.type == Gst.MessageType.ERROR:
             err, debug = message.parse_error()
             print "Error: %s" % err, debug
             self.pipe.set_state (Gst.State.NULL)
-        if message.type == Gst.MESSAGE_EOS:
+        if message.type == Gst.MessageType.EOS:
             # The end position is approx the duration
             # Null/Stop
             self.pipe.set_state (Gst.State.NULL)
@@ -150,7 +157,7 @@ class Record:
         self.pipe.set_state (Gst.State.PLAYING)
       else:
         print ("stop screencast record")
-        self.pipe.send_event (Gst.event_new_eos ())
+        self.pipe.send_event (Gst.Event.new_eos ())
         self.duration, format = self.pipe.query_position (Gst.FORMAT_TIME, None)
      #   self.pipe.set_state (Gst.State.NULL)
 

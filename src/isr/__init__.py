@@ -220,10 +220,10 @@ class isrMain:
         self.recordingInfoBar.hide ()
 
         self.currentRecording = isrNewRecording.NewRecording (self.mainWindow)
-
-        self.currentRecording.connect ("response",
-                                       self.new_record_setup_done)
-
+        print self.mainWindow
+        self.currentRecording.set_transient_for(self.mainWindow)
+        self.currentRecording.startRecordButton.connect ("clicked",
+                                                        self.new_record_setup_done)
 
         # New Project dialog
         self.newProjectDialogUI = Gtk.Builder ()
@@ -427,12 +427,9 @@ class isrMain:
 
         return filename
 
-    def new_record_setup_done (self, dialog, response):
+    def new_record_setup_done (self, button):
 
         self.currentRecording.close ()
-
-        if (response != Gtk.ResponseType.ACCEPT):
-            return
 
         dateStamp = datetime.today().strftime ("%d-%m-at-%Hh%Mm")
         currentRecording = self.currentRecording
@@ -463,8 +460,7 @@ class isrMain:
             self.enable_buttons (False)
 
     def new_record_button_clicked_cb (self, button):
-         # Open dialog for recording settings
-         self.currentRecording.open ()
+        self.currentRecording.open ()
 
     def record_stopped_cb (self):
         self.isRecording -= 1
