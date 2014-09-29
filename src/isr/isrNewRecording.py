@@ -38,8 +38,7 @@ Gst.init(None)
 VIDEO_PREVIEW_HEIGHT = 300
 VIDEO_PREVIEW_WIDTH = 600
 
-SCALE_CAPS = " video/x-raw,height=" + str(VIDEO_PREVIEW_HEIGHT) + ",width=" + str(VIDEO_PREVIEW_WIDTH) + ",name=\"tempcaps\" "
-
+SCALE_CAPS = " capsfilter name=\"previewcaps\" caps=\"video/x-raw,width="+str(VIDEO_PREVIEW_WIDTH)+",height="+str(VIDEO_PREVIEW_HEIGHT) + " \" "
 
 class mode:
     TWOCAM, SCREENCAST_PIP, SCREENCAST, WEBCAM = range (4)
@@ -408,7 +407,10 @@ class NewRecording (Gtk.Window):
 
 
         description = str("v4l2src device="+self.primarySource+""
-                      " name=\"cam1\""
+                      " name=\"cam1\" "
+                       # temp caps FIXME these need to be inspected and not
+                       # hardcoded
+                      " ! video/x-raw,height=480 "
                       " ! videoflip method=horizontal-flip"
                       " ! videoconvert"
                       " ! videoscale ! "
@@ -462,27 +464,29 @@ class NewRecording (Gtk.Window):
         # https://bugzilla.gnome.org/show_bug.cgi?id=727180
         temporaryCaps = " ! video/x-raw,height=" + str(self.primarySourceHeight)  +  ",width=" + str(self.primarySourceWidth) + " "
 
+        description = str ("v4l2src "
+                           " device=\""+self.secondarySource+"\""
+                           " name=\"cam2\" ! "
+                           " videoscale ! queue ! videoflip "
+                           " method=horizontal-flip ! "
+                           " videoconvert ! "
+                           " video/x-raw,height=240"
+                           " ! videomixer name=mix sink_0::xpos=0"
+                           " sink_0::ypos=0"
+                           " sink_1::xpos="+posXStr+""
+                           " sink_1::ypos="+posYStr+""
+                           + temporaryCaps +
+                           " ! videoscale ! "
+                           + SCALE_CAPS +
+                           " ! ximagesink name=\"sink\" "
+                           " sync=false force-aspect-ratio=true"
+                           " ximagesrc use-damage=false"
+                           " show-pointer=true  !"
+                           " videoscale !"
+                           " mix.")
 
-        self.player = Gst.parse_launch ("v4l2src "
-                                        " device=\""+self.secondarySource+"\""
-                                        " name=\"cam2\" ! "
-                                        " videoscale ! queue ! videoflip "
-                                        " method=horizontal-flip ! "
-                                        " videoconvert ! "
-                                        " video/x-raw,height=240"
-                                        " ! videomixer name=mix sink_0::xpos=0"
-                                        " sink_0::ypos=0"
-                                        " sink_1::xpos="+posXStr+""
-                                        " sink_1::ypos="+posYStr+""
-                                        + temporaryCaps +
-                                        " ! videoscale "
-                                        " ! video/x-raw,width=\"600\",height=\"300\" !"
-                                        " ximagesink name=\"sink\" "
-                                        " sync=false force-aspect-ratio=true"
-                                        " ximagesrc use-damage=false"
-                                        " show-pointer=true  !"
-                                        " videoscale !"
-                                        " mix.")
+        print description
+        self.player = Gst.parse_launch (description)
 
         bus = self.player.get_bus()
         bus.add_signal_watch()
@@ -535,6 +539,8 @@ class NewRecording (Gtk.Window):
                            " ximagesink name=\"sink\" sync=false "
                            " v4l2src device="+self.primarySource+ ""
                            "                 name=\"cam1\" ! "
+                           # temp
+                           " video/x-raw,height=480 ! "
                            " videoflip method=horizontal-flip ! "
                            " videoflip  method=vertical-flip ! "
                            " videoscale ! "
