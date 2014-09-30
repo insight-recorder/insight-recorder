@@ -622,18 +622,14 @@ class NewRecording (Gtk.Window):
         self.show_all ()
         self.samePrimaryAlert.hide ()
         self.sameSecondaryAlert.hide ()
-#        self.secondaryCombo.set_active (0)
- #       self.primaryCombo.set_active (0)
+        self.secondaryCombo.set_active (0)
+        self.primaryCombo.set_active (0)
         self.audioLevel.set_active (True)
         self.entry.set_text ("")
         self.entry.grab_focus ()
 
         self.opacityScale.set_value (1.0)
         self.secondarySource = self.defaultSecondarySource
-
-        self.primarySource = "/dev/video0"
-        self.video_preview_webcam_only()
-        self.player.set_state(Gst.State.PLAYING)
 
         if (self.defaultSecondarySource == None):
             self.video_preview_screencast_only ()
