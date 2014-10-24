@@ -20,13 +20,19 @@ insight-recorder
 
 == Required dependencies ==
 
+ - Gstreamer >= 1.2
+ - Gstreamer-plugins-good >= 1.2
+ - Gstreamer-plugins-base>= 1.2
+ - Gtk 3.12
+
 Debain/Ubuntu package names:
 
-- python-gi
-- gir1.2-gtk-3.0
-- gir1.2-gudev-1.0
-- gstreamer0.10-plugins-bad (vp8enc)
-- gstreamer0.10-plugins-good
-- gstreamer0.10-alsa
+ - gir1.2-gstreamer-1.0
+ - libgstreamer1.0-0
+ - gstreamer1.0-plugins-good
+ - gstreamer1.0-plugins-base
+
+Optional for translations:
+ - python-gettext
 
 # special for ubuntu gir1.2-appindicator3-0.1
