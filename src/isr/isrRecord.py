@@ -79,9 +79,9 @@ class Record:
       filesink.set_property ("location", fileOutputLocation)
 
       # Audio pipe
-      audiosrc = Gst.ElementFactory.make ("autoaudiosrc")
-      audioconv = Gst.ElementFactory.make ("audioconvert")
-      vorbisenc = Gst.ElementFactory.make ("vorbisenc")
+      audiosrc = Gst.ElementFactory.make ("autoaudiosrc", None)
+      audioconv = Gst.ElementFactory.make ("audioconvert", None)
+      vorbisenc = Gst.ElementFactory.make ("vorbisenc", None)
 
       # Add all the new elements playbin (where is add_many when you need it!)
       self.pipe.add (colorspace)
