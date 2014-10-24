@@ -255,7 +255,7 @@ class isrMain:
 
         # Gst.plugins-bad
         if (Gst.ElementFactory.find ("vp8enc") == None):
-            message += _("Element vp8enc missing: this is normally found in package gstreamer-plugins-bad\n")
+            message += _("Element vp8enc missing: this is normally found in package gstreamer-plugins-good\n")
         # Gst.plugins-good
         if (Gst.ElementFactory.find ("videomixer") == None):
             message += _("Element videomixer missing: this is normally found in package gstreamer-plugins-good\n")
@@ -265,8 +265,8 @@ class isrMain:
             message += _("Element videoscale missing: this is normally found in package gstreamer-plugins-base\n")
 
         # Gst.alsa
-        if (Gst.ElementFactory.find ("alsasrc") == None):
-            message += _("Element alsasrc missing: this is normally found in gstreamer-alsa\n")
+        if (Gst.ElementFactory.find ("autoaudiosrc") == None):
+            message += _("Element alsasrc missing: this is normally found in gstreamer-good\n")
 
         if (message == ""):
             return
