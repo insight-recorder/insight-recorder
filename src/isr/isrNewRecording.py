@@ -175,6 +175,7 @@ class NewRecording (Gtk.Window):
         settingsGrid.attach (audioButton, 2, 1 , 1, 1)
 
         buttonBox = Gtk.ButtonBox ()
+        buttonBox.set_spacing (5)
         buttonBox.set_layout (Gtk.ButtonBoxStyle.END)
         cancelButton = Gtk.Button.new_from_stock (Gtk.STOCK_CANCEL)
         cancelButton.connect ("clicked",
@@ -186,6 +187,9 @@ class NewRecording (Gtk.Window):
         buttonBox.add (self.startRecordButton)
 
         contentArea = Gtk.VBox()
+        contentArea.set_margin_bottom (8)
+        contentArea.set_margin_left (8)
+        contentArea.set_margin_right (8)
         contentArea.set_spacing (4)
         contentArea.set_margin_top (8)
         contentArea.add (recordingNameBox)
