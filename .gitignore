@@ -15,3 +15,4 @@ aclocal.m4
 src/isr/isrDefs.py
 data/insight-recorder.desktop
 data/insight-recorder.desktop.in
+po/.intltool-merge-cache

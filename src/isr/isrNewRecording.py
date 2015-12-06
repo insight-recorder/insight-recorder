@@ -356,6 +356,52 @@ class NewRecording (Gtk.Window):
 
         self.player.set_state (Gst.State.PLAYING)
 
+    def get_webcam_height_width_for_height(self, device, target_height):
+
+        v4l = Gst.ElementFactory.make("v4l2src")
+        v4l.set_property("device", device)
+        fake = Gst.ElementFactory.make("fakesink")
+
+        test_camera = Gst.Bin()
+        test_camera.add(v4l)
+        test_camera.add(fake)
+        v4l.link(fake)
+        test_camera.set_state(Gst.State.READY)
+
+        cap = v4l.pads[0].get_allowed_caps()
+
+        width = 0
+        height = 0
+
+        # We're assuming that all formats have the same width/height here
+        def findcap(feature, struct, res):
+            height = struct.get_value("height")
+            if struct.get_value("height") <= target_height:
+                res['width'] = struct.get_value("width")
+                res['height'] = height
+                # continue foreach False we found it
+                print "found values!"
+                return False
+            return True
+
+        # for each struct in the caps see if there is one that has a match for
+        # target_height
+        res = {}
+        cap.foreach(findcap, res)
+
+        v4l.set_locked_state (False)
+        v4l.set_state (Gst.State.NULL)
+        v4l.get_state(Gst.CLOCK_TIME_NONE)
+
+        test_camera.set_state(Gst.State.NULL)
+        # Fixme Block waiting for the state change
+        test_camera.get_state(Gst.CLOCK_TIME_NONE)
+
+        test_camera = None
+
+        return res['height'],res['width']
+
+
     def video_preview_screencast_only (self):
 
         if (self.mode == mode.SCREENCAST and self.mode is not None
@@ -454,41 +500,39 @@ class NewRecording (Gtk.Window):
 
         self.primarySourceHeight = screen.get_height ()
         self.primarySourceWidth = screen.get_width ()
-        self.secondarySourceHeight = 240
-        self.secondarySourceWidth = 320
 
+        cam_height, cam_width = self.get_webcam_height_width_for_height(
+            self.secondarySource,
+            240)
 
-        self.posY = self.primarySourceHeight - self.secondarySourceHeight
-        self.posX = self.primarySourceWidth - self.secondarySourceWidth
+        print "width %d " % cam_height
+        print "height %d " % cam_width
+        self.posY = self.primarySourceHeight - cam_height
+        self.posX = self.primarySourceWidth - cam_width
 
         posYStr = str (self.posY)
         posXStr = str (self.posX)
 
-        # Temporary workaround capsfilter issue
-        # https://bugzilla.gnome.org/show_bug.cgi?id=727180
-        temporaryCaps = " ! video/x-raw,height=" + str(self.primarySourceHeight)  +  ",width=" + str(self.primarySourceWidth) + " "
-
-        description = str ("v4l2src "
-                           " device=\""+self.secondarySource+"\""
-                           " name=\"cam2\" ! "
-                           " videoscale ! queue ! videoflip "
-                           " method=horizontal-flip ! "
-                           " videoconvert ! "
-                           " video/x-raw,height=240"
-                           " ! videomixer name=mix sink_0::xpos=0"
-                           " sink_0::ypos=0"
-                           " sink_1::xpos="+posXStr+""
-                           " sink_1::ypos="+posYStr+""
-                           + temporaryCaps +
-                           " ! videoscale ! "
-                           + SCALE_CAPS +
-                           " ! ximagesink name=\"sink\" "
-                           " sync=false force-aspect-ratio=true"
-                           " ximagesrc use-damage=false"
-                           " show-pointer=true  !"
-                           " videoscale !"
-                           " mix.")
-
+        description = str (
+            " ximagesrc use-damage=false"
+            " show-pointer=true  !"
+            " videoscale !"
+            " videomixer name=mix sink_1::zpos=\"1\""
+            " sink_1::xpos="+posXStr+""
+            " sink_1::ypos="+posYStr+""
+            " sink_0::zpos=\"0\""
+            " ! videoscale ! "
+            + SCALE_CAPS +
+            " ! ximagesink name=\"sink\" "
+            " sync=false force-aspect-ratio=true"
+            " v4l2src "
+            " device=\""+self.secondarySource+"\""
+            " name=\"cam2\" ! "
+            " videoscale ! queue ! videoflip "
+            " method=horizontal-flip ! "
+            " videoconvert ! "
+            " video/x-raw,height="+str(cam_height)+" ! mix."
+        )
         print description
         self.player = Gst.parse_launch (description)
 
