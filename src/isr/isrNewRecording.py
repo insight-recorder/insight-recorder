@@ -43,16 +43,16 @@ SCALE_CAPS = " capsfilter name=\"previewcaps\" caps=\"video/x-raw,width="+str(VI
 class mode:
     TWOCAM, SCREENCAST_PIP, SCREENCAST, WEBCAM = range (4)
 
-class NewRecording (Gtk.Window):
-    def __init__(self, mainWindow):
+class NewRecording (Gtk.Bin):
+    def __init__(self):
 
-        Gtk.Window.__init__ (self, Gtk.WindowType.TOPLEVEL)
-        self.set_title(_("Create recording"))
-        self.set_transient_for (mainWindow)
-        self.set_destroy_with_parent (True)
-        self.set_modal(True)
-        self.set_resizable (False)
-        self.set_position (Gtk.WindowPosition.CENTER_ON_PARENT)
+        Gtk.Bin.__init__ (self)
+#        self.set_title(_("Create recording"))
+ #       self.set_transient_for (mainWindow)
+  #      self.set_destroy_with_parent (True)
+   #     self.set_modal(True)
+    #    self.set_resizable (False)
+     #   self.set_position (Gtk.WindowPosition.CENTER_ON_PARENT)
 
 
         self.player = None
